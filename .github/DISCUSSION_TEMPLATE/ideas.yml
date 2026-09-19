@@ -1,0 +1,75 @@
+title: "[IDEA] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        # BUILDER COMMONS · IDEA LAB
+
+        Builder Commons is for ideas that can become working infrastructure.
+
+        **Start with the problem. Then show us the smallest useful thing we could build.**
+
+        Strong ideas preserve the core rules:
+        - Builder Commons is provider-agnostic where practical.
+        - External systems integrate through adapters.
+        - Humans and agents are both first-class participants.
+        - 3D is an interface, not the only interface.
+        - Execution authority stays explicit, scoped, and receipted.
+        - CBE owns opportunity/reputation; PAYRAIL owns settlement routing.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem are you solving?
+      placeholder: "Who has this problem, and what breaks or becomes difficult today?"
+    validations:
+      required: true
+
+  - type: textarea
+    id: idea
+    attributes:
+      label: The idea
+      description: Describe the capability, workflow, integration, room, protocol, or experience.
+      placeholder: "What should exist?"
+    validations:
+      required: true
+
+  - type: textarea
+    id: minimum
+    attributes:
+      label: Smallest useful version
+      description: What is the minimum version that proves the idea works?
+      placeholder: "Avoid designing the whole universe before proving the corridor."
+    validations:
+      required: true
+
+  - type: dropdown
+    id: boundary
+    attributes:
+      label: Where does it belong?
+      options:
+        - Builder Commons core
+        - CHAOS Builders Exchange bridge
+        - Repository / forge adapter
+        - Agent / runtime adapter
+        - Hermes Community Portal
+        - Gitlawb / bounty integration
+        - BYOE / compute
+        - Broadcast / realtime
+        - Spatial / XR
+        - PAYRAIL / economic rail
+        - Governance / security
+        - Not sure yet
+
+  - type: textarea
+    id: stack
+    attributes:
+      label: What would you bring?
+      description: Code, skills, design, hardware, agents, models, testing, compute, research, or other contribution.
+      placeholder: "Already building? Bring it."
+
+  - type: textarea
+    id: risks
+    attributes:
+      label: Risks / constraints
+      description: Security, permissions, dependencies, provider lock-in, costs, accessibility, or uncertainty.
