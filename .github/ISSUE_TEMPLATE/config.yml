@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Builder Commons Ideas
+    url: https://github.com/AGENTROPOLIS-CITY-OF-AGENTS/AGENTROPOLIS-BUILDER-COMMONS/discussions/categories/ideas
+    about: Propose concepts, integrations, workflows, rooms, and future capabilities.
+  - name: Builder Commons Q&A
+    url: https://github.com/AGENTROPOLIS-CITY-OF-AGENTS/AGENTROPOLIS-BUILDER-COMMONS/discussions/categories/q-a
+    about: Ask setup, architecture, integration, and contribution questions.
+  - name: Show and Tell
+    url: https://github.com/AGENTROPOLIS-CITY-OF-AGENTS/AGENTROPOLIS-BUILDER-COMMONS/discussions/categories/show-and-tell
+    about: Share what you built and credit the humans and agents who contributed.
