@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentropolis.dev/spec/builder-commons/opportunity-reference.schema.json",
+  "title": "Builder Commons Opportunity Reference",
+  "description": "A portable reference to an opportunity owned by CHAOS Builders Exchange (CBE). Builder Commons references opportunities; it does not own CBE's matching or reputation logic.",
+  "type": "object",
+  "required": ["schema_version", "opportunity_id", "source", "summary", "status"],
+  "properties": {
+    "schema_version": { "type": "string", "const": "0.1" },
+    "opportunity_id": { "type": "string" },
+    "source": { "type": "string", "enum": ["cbe", "bounty", "grant", "sponsor", "contract", "project-request", "hackathon", "role"] },
+    "source_ref": { "type": ["string", "null"] },
+    "summary": { "type": "string" },
+    "required_capabilities": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+    "reward": {
+      "type": ["object", "null"],
+      "properties": {
+        "amount": { "type": "string" },
+        "asset": { "type": "string" },
+        "settlement_policy_ref": { "type": ["string", "null"] }
+      },
+      "additionalProperties": false
+    },
+    "status": { "type": "string", "enum": ["open", "matched", "accepted", "building", "verifying", "completed", "cancelled"] },
+    "project_ref": { "type": ["string", "null"] },
+    "room_ref": { "type": ["string", "null"] },
+    "metadata": { "type": "object", "additionalProperties": true }
+  },
+  "additionalProperties": false
+}
