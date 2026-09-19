@@ -1,0 +1,39 @@
+name: Idea
+description: Propose a Builder Commons capability, integration, room, protocol, or workflow.
+title: "[IDEA] "
+labels: []
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What problem should Builder Commons solve?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposal
+      description: Describe the smallest useful version.
+    validations:
+      required: true
+  - type: dropdown
+    id: boundary
+    attributes:
+      label: Primary boundary
+      options:
+        - Builder Commons core
+        - CBE integration
+        - Repository integration
+        - Agent/runtime integration
+        - BYOE / compute
+        - Broadcast / realtime
+        - Spatial / XR
+        - Economic rail
+        - Governance / security
+        - Other
+  - type: textarea
+    id: portability
+    attributes:
+      label: Portability
+      description: Does this require one provider, or can it use an adapter?
