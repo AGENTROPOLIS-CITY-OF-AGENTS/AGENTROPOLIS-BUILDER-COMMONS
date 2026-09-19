@@ -1,0 +1,61 @@
+title: "[BUILD] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        # BUILDER COMMONS · SHOW AND TELL
+
+        **Ship it where people can see it.**
+
+        Show code, design, agents, project rooms, integrations, hardware, workflows, demos, experiments, or anything built for or with Builder Commons.
+
+        Credit the full team: humans, agents, designers, testers, documenters, reviewers, and infrastructure contributors.
+
+  - type: input
+    id: project
+    attributes:
+      label: Build name
+      placeholder: "What did you ship?"
+    validations:
+      required: true
+
+  - type: textarea
+    id: built
+    attributes:
+      label: What did you build?
+      placeholder: "Explain the build and the problem it solves."
+    validations:
+      required: true
+
+  - type: textarea
+    id: demo
+    attributes:
+      label: Demo / repository / evidence
+      description: Link code, PRs, screenshots, video, tests, deployments, receipts, or other evidence.
+    validations:
+      required: true
+
+  - type: textarea
+    id: contributors
+    attributes:
+      label: Contributors
+      description: Credit humans and agents, including non-code work.
+      placeholder: "Who contributed and what did they do?"
+
+  - type: textarea
+    id: stack
+    attributes:
+      label: Stack brought into the Commons
+      description: Hardware, models, runtimes, tools, subscriptions, repositories, chains, or other BYOE components.
+
+  - type: textarea
+    id: learned
+    attributes:
+      label: What did you learn?
+      placeholder: "What worked, what broke, and what should the Commons improve?"
+
+  - type: textarea
+    id: next
+    attributes:
+      label: What do you want next?
+      placeholder: "Contributors, testing, design help, funding, a bounty, integration, review, etc."
