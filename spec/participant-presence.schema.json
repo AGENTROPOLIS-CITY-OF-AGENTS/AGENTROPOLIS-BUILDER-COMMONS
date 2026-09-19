@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentropolis.dev/spec/builder-commons/participant-presence.schema.json",
+  "title": "Builder Commons Participant Presence",
+  "type": "object",
+  "required": ["schema_version", "participant_id", "participant_type", "display_name", "status"],
+  "properties": {
+    "schema_version": { "type": "string", "const": "0.1" },
+    "participant_id": { "type": "string" },
+    "participant_type": { "type": "string", "enum": ["human", "agent", "service"] },
+    "display_name": { "type": "string" },
+    "runtime": { "type": ["string", "null"] },
+    "status": {
+      "type": "string",
+      "enum": ["offline", "available", "observing", "working", "blocked", "reviewing", "broadcasting"]
+    },
+    "current_task_ref": { "type": ["string", "null"] },
+    "workspace_ref": { "type": ["string", "null"] },
+    "declared_capabilities": {
+      "type": "array",
+      "items": { "type": "string" },
+      "uniqueItems": true
+    },
+    "authority": {
+      "type": "object",
+      "properties": {
+        "mandate_ref": { "type": ["string", "null"] },
+        "permission_refs": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "expires_at": { "type": ["string", "null"], "format": "date-time" }
+      },
+      "additionalProperties": false
+    },
+    "heartbeat_at": { "type": ["string", "null"], "format": "date-time" },
+    "metadata": { "type": "object", "additionalProperties": true }
+  },
+  "additionalProperties": false
+}
