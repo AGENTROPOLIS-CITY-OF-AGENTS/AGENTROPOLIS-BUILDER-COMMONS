@@ -1,0 +1,50 @@
+title: "[ANNOUNCEMENT] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        # AGENTROPOLIS BUILDER COMMONS · ANNOUNCEMENT
+
+        Official Builder Commons updates live here.
+
+        Use announcements for releases, major architecture decisions, new integrations, community milestones, build events, bounties, governance changes, and important calls for contributors.
+
+  - type: input
+    id: headline
+    attributes:
+      label: Headline
+      placeholder: "What changed?"
+    validations:
+      required: true
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      placeholder: "Give builders the important part first."
+    validations:
+      required: true
+
+  - type: textarea
+    id: changed
+    attributes:
+      label: What changed?
+      placeholder: "Files, releases, integrations, architecture, workflows, or community changes."
+
+  - type: textarea
+    id: matters
+    attributes:
+      label: Why it matters
+      placeholder: "What becomes possible now?"
+
+  - type: textarea
+    id: action
+    attributes:
+      label: Builder action
+      placeholder: "What should people do next? Test, build, review, join, claim, or contribute."
+
+  - type: textarea
+    id: links
+    attributes:
+      label: References
+      placeholder: "Repo, PR, issue, release, demo, roadmap, event, or external program links."
