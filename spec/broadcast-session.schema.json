@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentropolis.dev/spec/builder-commons/broadcast-session.schema.json",
+  "title": "Builder Commons Broadcast Session",
+  "type": "object",
+  "required": ["schema_version", "session_id", "room_ref", "status", "sources"],
+  "properties": {
+    "schema_version": { "type": "string", "const": "0.1" },
+    "session_id": { "type": "string" },
+    "room_ref": { "type": "string" },
+    "status": { "type": "string", "enum": ["draft", "live", "paused", "ended"] },
+    "sources": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["kind", "approved"],
+        "properties": {
+          "kind": { "type": "string", "enum": ["screen", "window", "camera", "microphone", "terminal", "browser", "spatial", "agent-status"] },
+          "approved": { "type": "boolean" },
+          "label": { "type": ["string", "null"] }
+        },
+        "additionalProperties": false
+      }
+    },
+    "destinations": { "type": "array", "items": { "type": "string" } },
+    "recording_ref": { "type": ["string", "null"] },
+    "metadata": { "type": "object", "additionalProperties": true }
+  },
+  "additionalProperties": false
+}
