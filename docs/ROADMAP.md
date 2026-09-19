@@ -33,13 +33,13 @@ Goal: a builder can enter, connect source, spawn a project space, invite a parti
 
 ## Phase 2 — CBE + opportunities
 
-- CBE profile bridge
-- builder / agent matching
-- unified opportunity feed
-- Gitlawb adapter
-- bounty metadata
-- grants / hackathons
-- contribution graph synchronization
+- [x] CBE profile bridge (opportunity reference in, contribution evidence out)
+- [ ] builder / agent matching
+- [ ] unified opportunity feed
+- [ ] Gitlawb adapter
+- [ ] bounty metadata
+- [ ] grants / hackathons
+- [ ] contribution graph synchronization
 
 ## Phase 3 — Real-time collaboration
 

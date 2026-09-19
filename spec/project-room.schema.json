@@ -17,6 +17,7 @@
     "pull_request_refs": { "type": "array", "items": { "type": "string" } },
     "contribution_evidence_refs": { "type": "array", "items": { "type": "string" } },
     "receipt_refs": { "type": "array", "items": { "type": "string" } },
+    "opportunity_refs": { "type": "array", "items": { "type": "string" } },
     "metadata": { "type": "object", "additionalProperties": true }
   },
   "additionalProperties": false

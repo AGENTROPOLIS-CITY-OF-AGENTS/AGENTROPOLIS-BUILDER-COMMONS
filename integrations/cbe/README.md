@@ -6,18 +6,24 @@ CBE and Builder Commons are sibling systems.
 
 **Builder Commons:** where and how the work happens.
 
-## v0.1 bridge
+## v0.1 bridge (implemented)
+
+`integrations/cbe/src/bridge.mjs` provides the CBE bridge.
 
 CBE -> Commons:
-- opportunity reference
-- requested capabilities
-- mission metadata
-- bounty/grant metadata
+- `attachOpportunity({ room, opportunity })` — accepts an opportunity reference
+  and attaches it to a room's `opportunity_refs`. Validates the opportunity
+  against the opportunity-reference contract (source, status, summary).
 
 Commons -> CBE:
-- accepted mission
-- contribution evidence
-- verification state
-- receipt references
+- `emitContribution({ contribution })` — emits verified contribution evidence
+  as a CBE-consumable payload (evidence id, project, contributor, type,
+  evidence refs, verification state, receipt refs).
 
-CBE must not become the owner of persistent project-room state.
+The bridge never duplicates CBE's reputation or marketplace logic, and CBE
+never becomes the owner of persistent project-room state.
+
+## Contracts
+
+- `spec/opportunity-reference.schema.json` — portable opportunity reference
+- `spec/contribution-evidence.schema.json` — portable contribution evidence

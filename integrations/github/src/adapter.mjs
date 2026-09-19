@@ -12,11 +12,38 @@ function encodeLocator(locator) {
   return locator.split("/").map(encodeURIComponent).join("/");
 }
 
-export function createGitHubAdapter({ credentialProvider, requestJson }) {
-  if (!credentialProvider) throw new Error("credentialProvider is required");
+// Default live HTTP client. Uses global fetch when available.
+async function defaultRequestJson(url, options = {}) {
+  if (typeof fetch !== "function") {
+    throw new Error("no fetch implementation available; provide requestJson");
+  }
+  const response = await fetch(url, options);
+  if (!response.ok) {
+    throw new Error(`GitHub API request failed: ${response.status} ${response.statusText}`);
+  }
+  return response.json();
+}
+
+export function createGitHubAdapter({
+  credentialProvider,
+  credentialBroker = null,
+  credentialId = null,
+  requestJson = defaultRequestJson
+}) {
+  if (!credentialProvider && !(credentialBroker && credentialId)) {
+    throw new Error("credentialProvider or (credentialBroker + credentialId) is required");
+  }
   if (typeof requestJson !== "function") throw new Error("requestJson is required");
 
+  let connection = null;
+
   async function accessToken() {
+    // Prefer the credential broker (BYOK): temporary, scoped, revocable, expiring.
+    if (credentialBroker && credentialId) {
+      const token = credentialBroker.get(credentialId);
+      if (!token) throw new Error("GitHub credential is not active (missing, revoked, or expired)");
+      return token;
+    }
     const token = typeof credentialProvider === "function"
       ? await credentialProvider()
       : await credentialProvider.getAccessToken?.();
@@ -52,14 +79,23 @@ export function createGitHubAdapter({ credentialProvider, requestJson }) {
 
     async connect() {
       const account = await authorizedRequest("https://api.github.com/user");
-      return {
+      connection = {
         provider: "github",
         connected: true,
-        account: {
-          login: account.login,
-          id: account.id
-        }
+        account: { login: account.login, id: account.id }
       };
+      return { ...connection };
+    },
+
+    async disconnect() {
+      connection = null;
+      return { provider: "github", connected: false };
+    },
+
+    connectionState() {
+      return connection
+        ? { ...connection }
+        : { provider: "github", connected: false };
     },
 
     async listRepositories({ maxPages = 100 } = {}) {

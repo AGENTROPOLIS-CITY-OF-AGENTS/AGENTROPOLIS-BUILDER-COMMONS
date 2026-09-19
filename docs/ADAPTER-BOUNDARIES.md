@@ -32,7 +32,7 @@ defines the provider-portable surface: `connect`, `listRepositories`,
 
 | Provider | Status | Notes |
 | --- | --- | --- |
-| Hermes | AVAILABLE | First-class runtime/community integration. Hermes is an adapter, not the foundation of Builder Commons. A Hermes-compatible agent enters a room through the standard participant-presence contract. |
+| Hermes | AVAILABLE | First-class runtime/community integration. Hermes adapter (`integrations/hermes/src/adapter.mjs`) maps agents into the participant-presence contract. Hermes is an adapter, not the foundation of Builder Commons. |
 
 ## Economic adapters
 
@@ -44,7 +44,7 @@ defines the provider-portable surface: `connect`, `listRepositories`,
 
 | Provider | Status | Notes |
 | --- | --- | --- |
-| CBE | PLANNED | CBE owns opportunities, matching, reputation, contracts. Builder Commons references opportunities (`spec/opportunity-reference.schema.json`) and emits verified contribution evidence (`spec/contribution-evidence.schema.json`). |
+| CBE | AVAILABLE | CBE owns opportunities, matching, reputation, contracts. The CBE bridge (`integrations/cbe/src/bridge.mjs`) accepts opportunity references (`spec/opportunity-reference.schema.json`) and emits verified contribution evidence (`spec/contribution-evidence.schema.json`). |
 
 ## Compute adapters
 
@@ -56,7 +56,15 @@ defines the provider-portable surface: `connect`, `listRepositories`,
 
 - Keys, secrets, and wallet credentials never live in project-room state, the
   activity stream, or the public discussion layer.
-- Credentials flow through a credential/capability broker: temporary, scoped,
-  revocable, expiring, auditable.
+- Credentials flow through a credential/capability broker (`packages/credential-broker`):
+  temporary, scoped, revocable, expiring, auditable.
 - Raw secrets are never logged.
 - No UI action alone confers agent authority. Presence is descriptive.
+
+## Live connectivity
+
+The GitHub adapter (`integrations/github/src/adapter.mjs`) supports live
+connectivity through a real fetch-based HTTP client and a credential broker
+(BYOK). It remains MOCK in this environment until a real credential broker is
+wired with a live token. Connection state is tracked via `connect`,
+`disconnect`, and `connectionState`.

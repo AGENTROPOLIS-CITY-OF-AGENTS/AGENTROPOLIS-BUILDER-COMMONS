@@ -140,3 +140,38 @@ test("renderAll populates the room and dock surfaces", () => {
   assert.ok(dock.innerHTML.includes("grant-verity-pr"), "agent dock must render the capability grant");
   assert.ok(dock.innerHTML.includes("github:pr:create"), "agent dock must render scoped permissions");
 });
+
+test("Phase 2: CBE bridge, Hermes adapter, and event log wire into the shell", () => {
+  spawnDemoCorridor();
+  renderAll();
+
+  // CBE bridge attached an opportunity to the room.
+  assert.ok(state.opportunity, "opportunity must be attached via the CBE bridge");
+  assert.equal(state.opportunity.source, "cbe");
+  assert.deepEqual(state.room.opportunity_refs, ["opp-1"]);
+
+  // Hermes adapter registered the agent with the hermes runtime.
+  const verity = state.registry.get("agent:verity");
+  assert.equal(verity.runtime, "hermes", "agent must be registered through the Hermes adapter");
+
+  // Event log recorded room activity.
+  assert.ok(state.eventLog.count() >= 4, "event log must record room lifecycle events");
+  const types = state.eventLog.list().map((e) => e.type);
+  assert.ok(types.includes("room.created"));
+  assert.ok(types.includes("opportunity.attached"));
+  assert.ok(types.includes("evidence.recorded"));
+
+  // The activity feed renders events.
+  const feed = elements.get("[data-role='activity-feed']");
+  assert.ok(feed.innerHTML.includes("room.created"), "activity feed must render event log entries");
+
+  // The opportunity preview renders the attached opportunity.
+  const oppPreview = elements.get("[data-role='opportunity-preview']");
+  assert.ok(oppPreview.innerHTML.includes("Build the integrated corridor"));
+
+  // Integrations registry reflects the CBE bridge as available.
+  const cbe = INTEGRATIONS.find((i) => i.id === "cbe");
+  assert.equal(cbe.status, "available");
+  const hermes = INTEGRATIONS.find((i) => i.id === "hermes");
+  assert.equal(hermes.status, "available");
+});

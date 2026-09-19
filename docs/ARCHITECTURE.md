@@ -215,12 +215,17 @@ packages/
   project-room/src/room.mjs           Room state model
   project-room/src/file-store.mjs     Persistent room store
   repository-adapter/src/contract.mjs Provider-portable repository contract
+  credential-broker/src/broker.mjs    BYOK credential broker (temporary, scoped,
+                                      revocable, expiring, auditable)
+  events/src/event-log.mjs            Append-only room event log (realtime prep)
   design-system/tokens.css           AGENTROPOLIS design tokens
 
 integrations/
-  github/src/adapter.mjs             GitHub repository adapter (MOCK)
-  broadcast/ cbe/ compute/ gitlawb/  Boundary docs (PLANNED)
-  hermes/ payrail/                   Boundary docs (AVAILABLE / PLANNED)
+  github/src/adapter.mjs             GitHub repository adapter (MOCK, live-ready)
+  cbe/src/bridge.mjs                 CBE bridge (opportunity in, evidence out)
+  hermes/src/adapter.mjs             Hermes agent presence adapter
+  broadcast/ compute/ gitlawb/       Boundary docs (PLANNED)
+  payrail/                           Boundary doc (PLANNED)
 
 spec/                                Portable contracts (draft-2020-12)
   project-manifest, participant-presence, contribution-evidence,

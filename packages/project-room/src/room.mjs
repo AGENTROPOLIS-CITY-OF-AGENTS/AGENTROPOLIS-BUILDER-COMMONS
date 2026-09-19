@@ -14,6 +14,7 @@ export function createProjectRoom({ roomId, projectId, repositoryRefs = [] }) {
     pull_request_refs: [],
     contribution_evidence_refs: [],
     receipt_refs: [],
+    opportunity_refs: [],
     metadata: {}
   };
 }
@@ -35,7 +36,8 @@ export function addRoomReference(room, collection, ref) {
     "issue_refs",
     "pull_request_refs",
     "contribution_evidence_refs",
-    "receipt_refs"
+    "receipt_refs",
+    "opportunity_refs"
   ]);
   if (!allowed.has(collection)) throw new Error("unsupported reference collection");
   if (!room[collection].includes(ref)) room[collection].push(ref);
