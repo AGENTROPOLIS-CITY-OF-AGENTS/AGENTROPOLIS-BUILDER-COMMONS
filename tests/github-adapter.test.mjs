@@ -61,6 +61,59 @@ test("GitHub adapter connects, lists, and imports without persisting credentials
   assert.equal(JSON.stringify(manifest).includes(secret), false);
 });
 
+test("GitHub adapter paginates repository discovery", async () => {
+  const requestJson = async (url) => {
+    if (url.includes("page=1")) {
+      return Array.from({ length: 100 }, (_, i) => ({
+        full_name: `owner/repo-${i}`,
+        name: `repo-${i}`,
+        private: false,
+        default_branch: "main",
+        html_url: `https://github.com/owner/repo-${i}`
+      }));
+    }
+
+    if (url.includes("page=2")) {
+      return [{
+        full_name: "owner/repo-100",
+        name: "repo-100",
+        private: false,
+        default_branch: "main",
+        html_url: "https://github.com/owner/repo-100"
+      }];
+    }
+
+    throw new Error(`unexpected URL: ${url}`);
+  };
+
+  const adapter = createGitHubAdapter({
+    credentialProvider: async () => "token",
+    requestJson
+  });
+
+  const repos = await adapter.listRepositories();
+  assert.equal(repos.length, 101);
+  assert.equal(repos.at(-1).locator, "owner/repo-100");
+});
+
+test("GitHub adapter propagates credential and request failures without persisting partial state", async () => {
+  const noCredential = createGitHubAdapter({
+    credentialProvider: async () => null,
+    requestJson: async () => []
+  });
+
+  await assert.rejects(() => noCredential.listRepositories(), /not authorized/);
+
+  const requestFailure = createGitHubAdapter({
+    credentialProvider: async () => "token",
+    requestJson: async () => {
+      throw new Error("network down");
+    }
+  });
+
+  await assert.rejects(() => requestFailure.connect(), /network down/);
+});
+
 test("GitHub adapter rejects malformed repository locators", async () => {
   const adapter = createGitHubAdapter({
     credentialProvider: async () => "token",
