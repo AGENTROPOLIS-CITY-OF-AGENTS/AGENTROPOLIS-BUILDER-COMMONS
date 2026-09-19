@@ -36,6 +36,17 @@ export function createGitHubAdapter({ credentialProvider, requestJson }) {
     });
   }
 
+  function normalizeRepo(repo) {
+    return {
+      provider: "github",
+      locator: repo.full_name,
+      name: repo.name,
+      private: Boolean(repo.private),
+      default_branch: repo.default_branch,
+      html_url: repo.html_url
+    };
+  }
+
   return {
     provider: "github",
 
@@ -51,24 +62,42 @@ export function createGitHubAdapter({ credentialProvider, requestJson }) {
       };
     },
 
-    async listRepositories() {
-      const repos = await authorizedRequest(
-        "https://api.github.com/user/repos?per_page=100&sort=updated&affiliation=owner,collaborator,organization_member"
-      );
+    async listRepositories({ maxPages = 100 } = {}) {
+      if (!Number.isInteger(maxPages) || maxPages < 1) {
+        throw new Error("maxPages must be a positive integer");
+      }
 
-      return repos.map((repo) => ({
-        provider: "github",
-        locator: repo.full_name,
-        name: repo.name,
-        private: Boolean(repo.private),
-        default_branch: repo.default_branch,
-        html_url: repo.html_url
-      }));
+      const repositories = [];
+      const seen = new Set();
+
+      for (let page = 1; page <= maxPages; page += 1) {
+        const batch = await authorizedRequest(
+          `https://api.github.com/user/repos?per_page=100&page=${page}&sort=updated&affiliation=owner,collaborator,organization_member`
+        );
+
+        if (!Array.isArray(batch)) {
+          throw new Error("GitHub repository list response must be an array");
+        }
+
+        for (const repo of batch) {
+          if (!repo?.full_name || seen.has(repo.full_name)) continue;
+          seen.add(repo.full_name);
+          repositories.push(normalizeRepo(repo));
+        }
+
+        if (batch.length < 100) break;
+      }
+
+      return repositories;
     },
 
     async importRepository({ locator, projectId, projectName }) {
       const encoded = encodeLocator(locator);
       const repo = await authorizedRequest(`https://api.github.com/repos/${encoded}`);
+
+      if (!repo?.full_name || !repo?.name) {
+        throw new Error("GitHub repository response is missing identity fields");
+      }
 
       const repository = normalizeRepositoryRef({
         provider: "github",
