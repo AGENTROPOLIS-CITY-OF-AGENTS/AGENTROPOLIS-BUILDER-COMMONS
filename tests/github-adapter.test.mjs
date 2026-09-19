@@ -63,7 +63,7 @@ test("GitHub adapter connects, lists, and imports without persisting credentials
 
 test("GitHub adapter paginates repository discovery", async () => {
   const requestJson = async (url) => {
-    if (url.includes("page=1")) {
+    if (url.includes("&page=1&")) {
       return Array.from({ length: 100 }, (_, i) => ({
         full_name: `owner/repo-${i}`,
         name: `repo-${i}`,
@@ -73,7 +73,7 @@ test("GitHub adapter paginates repository discovery", async () => {
       }));
     }
 
-    if (url.includes("page=2")) {
+    if (url.includes("&page=2&")) {
       return [{
         full_name: "owner/repo-100",
         name: "repo-100",
