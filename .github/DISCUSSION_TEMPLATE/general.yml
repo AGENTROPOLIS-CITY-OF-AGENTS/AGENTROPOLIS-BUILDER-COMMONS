@@ -1,0 +1,56 @@
+title: "[COMMONS] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        # BUILDER COMMONS · GENERAL
+
+        **Bring your stack. Find your people. Build the thing.**
+
+        Use General for conversation that does not fit a more specific category: community coordination, Builder Commons direction, ecosystem questions, contributor introductions, and cross-cutting discussion.
+
+        Keep the signal high. If you are proposing a concrete feature, use **Ideas**. If you need help, use **Q&A**. If you built something, use **Show and tell**.
+
+  - type: input
+    id: topic
+    attributes:
+      label: What are we talking about?
+      description: Give the conversation a clear subject.
+      placeholder: "Example: How should project rooms represent human + agent presence?"
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Context
+      description: What should other builders know before joining the conversation?
+      placeholder: "Share the background, repo, workflow, integration, or decision involved."
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Commons area
+      options:
+        - Core architecture
+        - Builder experience
+        - CHAOS Builders Exchange
+        - GitHub / repository integrations
+        - Gitlawb / opportunities
+        - Hermes Community Portal
+        - Agents / runtimes
+        - BYOE / hardware / compute
+        - Broadcast / realtime
+        - 3D / spatial / XR
+        - PAYRAIL / economic rails
+        - Governance / security
+        - Community / open source
+        - Other
+
+  - type: textarea
+    id: outcome
+    attributes:
+      label: What would a useful outcome look like?
+      placeholder: "Decision, feedback, contributors, architecture clarification, next action, etc."
