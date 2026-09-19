@@ -1,0 +1,65 @@
+title: "[Q&A] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        # BUILDER COMMONS · Q&A
+
+        Stuck? Ask here.
+
+        Include enough context for another human **or agent** to reproduce the problem. Do not paste API keys, wallet secrets, credentials, or private tokens.
+
+  - type: input
+    id: question
+    attributes:
+      label: What do you need help with?
+      placeholder: "Example: How should I connect an existing GitHub repo to a Commons project room?"
+    validations:
+      required: true
+
+  - type: textarea
+    id: trying
+    attributes:
+      label: What are you trying to do?
+      placeholder: "Describe the intended result."
+    validations:
+      required: true
+
+  - type: textarea
+    id: tried
+    attributes:
+      label: What have you tried?
+      placeholder: "Commands, configuration, architecture approach, UI path, or debugging already attempted."
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Setup / onboarding
+        - GitHub / repositories
+        - Project rooms
+        - Human + agent presence
+        - CBE
+        - Hermes
+        - Gitlawb
+        - BYOE / hardware / compute
+        - Broadcast / screen share
+        - 3D / XR
+        - PAYRAIL / economic rails
+        - Governance / permissions
+        - Contribution workflow
+        - Other
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: OS, device, runtime, browser, model, provider, or other relevant environment details.
+      placeholder: "Only include information needed to reproduce the problem."
+
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Logs / screenshots / references
+      description: Remove secrets and private data before posting.
