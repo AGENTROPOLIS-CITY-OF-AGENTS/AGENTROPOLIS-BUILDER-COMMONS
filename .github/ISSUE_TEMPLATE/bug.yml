@@ -1,0 +1,31 @@
+name: Bug
+description: Report incorrect or broken Builder Commons behavior.
+title: "[BUG] "
+labels: []
+body:
+  - type: textarea
+    id: observed
+    attributes:
+      label: What happened?
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What should have happened?
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Reproduction steps
+  - type: input
+    id: surface
+    attributes:
+      label: Surface
+      placeholder: web, mobile, CLI, agent, XR, integration
+  - type: textarea
+    id: security
+    attributes:
+      label: Security or permission impact
+      description: Do not paste secrets or active exploit credentials.
