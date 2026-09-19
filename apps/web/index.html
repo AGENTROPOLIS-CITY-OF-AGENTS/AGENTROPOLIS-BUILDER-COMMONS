@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#040608" />
+  <meta name="description" content="AGENTROPOLIS Builder Commons — persistent collaborative build world for humans and agents." />
+  <title>AGENTROPOLIS Builder Commons</title>
+  <link rel="stylesheet" href="../../packages/design-system/tokens.css" />
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <div class="grid" aria-hidden="true"></div>
+
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-mark">A</span>
+      <span>AGENTROPOLIS</span>
+    </div>
+    <nav class="nav" aria-label="Builder Commons surfaces">
+      <button class="nav-btn is-active" data-surface="atrium">ATRIUM</button>
+      <button class="nav-btn" data-surface="room">PROJECT ROOM</button>
+      <button class="nav-btn" data-surface="dock">AGENT DOCK</button>
+      <button class="nav-btn" data-surface="integrations">INTEGRATIONS</button>
+    </nav>
+    <span class="status"><i></i> BUILDER COMMONS · v0.1</span>
+  </header>
+
+  <main>
+    <!-- ============ BUILDER ATRIUM ============ -->
+    <section class="surface is-active" data-surface-panel="atrium" aria-label="Builder Atrium">
+      <div class="atrium-hero">
+        <p class="eyebrow">CHAOS CODE · OPEN BUILD WORLD</p>
+        <h1>BUILDER <span>COMMONS</span></h1>
+        <p class="lead">Bring your stack. Find your people. Build the thing.</p>
+        <p class="sublead">A persistent collaborative build world for humans + agents.</p>
+      </div>
+
+      <div class="atrium-grid">
+        <article class="panel">
+          <h2>RECENT PROJECTS</h2>
+          <ul class="project-list" data-role="recent-projects">
+            <li class="empty">No projects yet. Import a repository to spawn a room.</li>
+          </ul>
+        </article>
+
+        <article class="panel">
+          <h2>PRESENCE</h2>
+          <ul class="presence-list" data-role="presence-list">
+            <li class="empty">No participants present.</li>
+          </ul>
+        </article>
+
+        <article class="panel">
+          <h2>OPPORTUNITY PREVIEW</h2>
+          <ul class="opportunity-list" data-role="opportunity-preview">
+            <li class="empty">No opportunities linked from CBE.</li>
+          </ul>
+        </article>
+
+        <article class="panel">
+          <h2>SYSTEM STATUS</h2>
+          <dl class="status-list" data-role="system-status">
+            <div><dt>Room store</dt><dd data-status="store">—</dd></div>
+            <div><dt>Presence registry</dt><dd data-status="presence">—</dd></div>
+            <div><dt>Capability broker</dt><dd data-status="broker">—</dd></div>
+            <div><dt>Compute</dt><dd data-status="compute">—</dd></div>
+          </dl>
+        </article>
+      </div>
+
+      <div class="atrium-actions">
+        <button class="primary" data-action="import-repo">IMPORT REPOSITORY</button>
+        <button class="secondary" data-action="spawn-room">SPAWN PROJECT ROOM</button>
+      </div>
+    </section>
+
+    <!-- ============ PROJECT ROOM ============ -->
+    <section class="surface" data-surface-panel="room" aria-label="Project Room">
+      <div class="room-head">
+        <div>
+          <p class="eyebrow">PROJECT ROOM</p>
+          <h2 data-role="room-title">—</h2>
+          <p class="sublead" data-role="room-id">—</p>
+        </div>
+        <span class="room-state" data-role="room-state">open</span>
+      </div>
+
+      <div class="room-grid">
+        <article class="panel">
+          <h2>REPOSITORIES</h2>
+          <ul class="ref-list" data-role="repo-refs">
+            <li class="empty">No repositories connected.</li>
+          </ul>
+        </article>
+
+        <article class="panel">
+          <h2>PARTICIPANTS</h2>
+          <ul class="presence-list" data-role="room-participants">
+            <li class="empty">No participants.</li>
+          </ul>
+        </article>
+
+        <article class="panel">
+          <h2>TASK / ACTIVITY FEED</h2>
+          <ul class="feed" data-role="activity-feed">
+            <li class="empty">No activity yet.</li>
+          </ul>
+        </article>
+
+        <article class="panel">
+          <h2>EVIDENCE / CONTRIBUTION FEED</h2>
+          <ul class="feed" data-role="evidence-feed">
+            <li class="empty">No contribution evidence recorded.</li>
+          </ul>
+        </article>
+
+        <article class="panel">
+          <h2>RECEIPTS</h2>
+          <ul class="ref-list" data-role="receipt-refs">
+            <li class="empty">No receipts recorded.</li>
+          </ul>
+        </article>
+
+        <article class="panel">
+          <h2>ROOM PERSISTENCE</h2>
+          <p class="sublead" data-role="persistence-boundary">State is separated from events, authority, and evidence.</p>
+          <div class="persistence-actions">
+            <button class="secondary" data-action="save-room">SAVE ROOM</button>
+            <button class="secondary" data-action="reload-room">RELOAD ROOM</button>
+          </div>
+          <p class="muted" data-role="persistence-status">—</p>
+        </article>
+      </div>
+    </section>
+
+    <!-- ============ AGENT DOCK ============ -->
+    <section class="surface" data-surface-panel="dock" aria-label="Agent Dock">
+      <div class="room-head">
+        <div>
+          <p class="eyebrow">AGENT DOCK</p>
+          <h2>CONNECTED AGENTS</h2>
+          <p class="sublead">Presence is descriptive. Presence never grants authority.</p>
+        </div>
+      </div>
+
+      <div class="dock-grid" data-role="agent-dock">
+        <article class="panel dock-card">
+          <h2>NO AGENTS DOCKED</h2>
+          <p class="muted">Connect a governed agent runtime to see its mandate, permissions, and heartbeat here.</p>
+        </article>
+      </div>
+    </section>
+
+    <!-- ============ INTEGRATIONS ============ -->
+    <section class="surface" data-surface-panel="integrations" aria-label="Integrations">
+      <div class="room-head">
+        <div>
+          <p class="eyebrow">INTEGRATIONS</p>
+          <h2>ADAPTER SURFACES</h2>
+          <p class="sublead">Provider integrations sit behind adapters. Status is honest: CONNECTED / AVAILABLE / PLANNED / MOCK.</p>
+        </div>
+      </div>
+
+      <div class="integrations-grid" data-role="integrations-list">
+        <!-- rendered by app.mjs -->
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <span>BUILD DIFFERENT. TOGETHER.</span>
+    <span>AGENTROPOLIS DESIGN SYSTEM</span>
+  </footer>
+
+  <script type="module" src="./app.mjs"></script>
+</body>
+</html>

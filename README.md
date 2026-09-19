@@ -100,6 +100,8 @@ Integrations remain packages until they clearly need independent deployment or m
 - [CBE Integration](docs/CBE-INTEGRATION.md)
 - [Hermes Portal](docs/HERMES-PORTAL.md)
 - [Roadmap](docs/ROADMAP.md)
+- [Local Development](docs/LOCAL-DEVELOPMENT.md)
+- [Adapter Boundaries](docs/ADAPTER-BOUNDARIES.md)
 - [Security](SECURITY.md)
 - [Contributing](CONTRIBUTING.md)
 

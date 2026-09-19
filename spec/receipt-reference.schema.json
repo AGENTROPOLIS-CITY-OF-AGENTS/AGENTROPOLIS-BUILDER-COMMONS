@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentropolis.dev/spec/builder-commons/receipt-reference.schema.json",
+  "title": "Builder Commons Receipt Reference",
+  "description": "A portable reference to an execution receipt produced by the AGENTROPOLIS governed execution corridor. Receipts correlate work to audit; they never carry raw secrets.",
+  "type": "object",
+  "required": ["schema_version", "receipt_id", "kind", "subject_ref", "issued_at"],
+  "properties": {
+    "schema_version": { "type": "string", "const": "0.1" },
+    "receipt_id": { "type": "string" },
+    "kind": { "type": "string", "enum": ["execution", "verification", "settlement", "revocation", "contribution", "audit"] },
+    "subject_ref": { "type": "string" },
+    "action_ref": { "type": ["string", "null"] },
+    "resource_ref": { "type": ["string", "null"] },
+    "correlation_refs": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+    "issued_at": { "type": "string", "format": "date-time" },
+    "audit_ref": { "type": ["string", "null"] },
+    "metadata": { "type": "object", "additionalProperties": true }
+  },
+  "additionalProperties": false
+}

@@ -194,3 +194,54 @@ Expiry / revocation
 **Spectacle is optional. Function is not.**
 
 Every spatial operation that matters must have a non-spatial equivalent.
+
+## 9. Executable package map
+
+The repository is a monorepo. The application shell is a thin DOM layer over
+DOM-free engine packages, so the engine is fully testable without a browser.
+
+```text
+apps/web/                     Application shell (Builder Atrium, Project Room,
+  index.html                    Agent Dock, Integrations)
+  styles.css                  AGENTROPOLIS design system applied
+  app.mjs                     Wires the packages into the four surfaces
+
+packages/
+  commons-core/src/project.mjs        Project manifest
+  presence/src/presence.mjs           Presence record factory
+  presence/src/registry.mjs           Presence registry + canPresenceExecute
+  capability-broker/src/grant.mjs     Scoped, expiring, revocable grants
+  contribution/src/evidence.mjs       Contribution evidence + verification
+  project-room/src/room.mjs           Room state model
+  project-room/src/file-store.mjs     Persistent room store
+  repository-adapter/src/contract.mjs Provider-portable repository contract
+  design-system/tokens.css           AGENTROPOLIS design tokens
+
+integrations/
+  github/src/adapter.mjs             GitHub repository adapter (MOCK)
+  broadcast/ cbe/ compute/ gitlawb/  Boundary docs (PLANNED)
+  hermes/ payrail/                   Boundary docs (AVAILABLE / PLANNED)
+
+spec/                                Portable contracts (draft-2020-12)
+  project-manifest, participant-presence, contribution-evidence,
+  project-room, capability-grant, mission, broadcast-session,
+  compute-resource, opportunity-reference, receipt-reference
+
+tests/                               node --test suite (engine + contracts + UI)
+scripts/validate.mjs                 Repo validation gate
+```
+
+### State / events / authority / evidence separation
+
+Project-room state is a distinct model (`packages/project-room/src/room.mjs`).
+It is not a single mutable blob:
+
+- **STATE** — the room model (participants, refs, tasks, notes).
+- **AUTHORITY** — capability grants (`packages/capability-broker`), never
+  inferred from presence or UI state.
+- **EVIDENCE** — contribution evidence (`packages/contribution`), referenced by
+  the room via `contribution_evidence_refs`.
+- **RECEIPTS** — referenced via `receipt_refs`; correlated to audit.
+
+Presence is descriptive. It never grants authority. See
+`docs/ADAPTER-BOUNDARIES.md` and `docs/LOCAL-DEVELOPMENT.md`.
