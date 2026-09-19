@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentropolis.dev/spec/builder-commons/project-room.schema.json",
+  "title": "Builder Commons Project Room",
+  "type": "object",
+  "required": ["schema_version", "room_id", "project_id", "state", "participants"],
+  "properties": {
+    "schema_version": { "type": "string", "const": "0.1" },
+    "room_id": { "type": "string" },
+    "project_id": { "type": "string" },
+    "state": { "type": "string", "enum": ["open", "paused", "archived"] },
+    "participants": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+    "tasks": { "type": "array", "items": { "type": "string" } },
+    "notes": { "type": "array", "items": { "type": "string" } },
+    "repository_refs": { "type": "array", "items": { "type": "string" } },
+    "issue_refs": { "type": "array", "items": { "type": "string" } },
+    "pull_request_refs": { "type": "array", "items": { "type": "string" } },
+    "contribution_evidence_refs": { "type": "array", "items": { "type": "string" } },
+    "receipt_refs": { "type": "array", "items": { "type": "string" } },
+    "metadata": { "type": "object", "additionalProperties": true }
+  },
+  "additionalProperties": false
+}
