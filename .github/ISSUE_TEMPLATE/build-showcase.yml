@@ -1,0 +1,31 @@
+name: Build Showcase
+description: Share something built with or for Builder Commons.
+title: "[SHOWCASE] "
+labels: []
+body:
+  - type: input
+    id: project
+    attributes:
+      label: Project
+    validations:
+      required: true
+  - type: textarea
+    id: built
+    attributes:
+      label: What did you build?
+    validations:
+      required: true
+  - type: textarea
+    id: contributors
+    attributes:
+      label: Contributors
+      description: Include humans, agents, design, testing, documentation, and other verified work.
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence
+      description: Link repositories, PRs, demos, tests, recordings, or receipts.
+  - type: textarea
+    id: next
+    attributes:
+      label: What should happen next?
