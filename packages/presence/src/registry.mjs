@@ -1,5 +1,15 @@
 import { can } from "../../capability-broker/src/grant.mjs";
 
+const STATUSES = new Set([
+  "offline",
+  "available",
+  "observing",
+  "working",
+  "blocked",
+  "reviewing",
+  "broadcasting"
+]);
+
 function clone(value) {
   return JSON.parse(JSON.stringify(value));
 }
@@ -13,6 +23,7 @@ export class PresenceRegistry {
 
   upsert(presence) {
     if (!presence?.participant_id) throw new Error("participant_id is required");
+    if (!STATUSES.has(presence.status)) throw new Error("invalid status");
 
     const next = clone(presence);
     next.heartbeat_at = new Date(this.clock()).toISOString();
@@ -23,9 +34,11 @@ export class PresenceRegistry {
   heartbeat(participantId, { status } = {}) {
     const current = this.records.get(participantId);
     if (!current) throw new Error("participant is not registered");
+    if (status !== undefined && !STATUSES.has(status)) throw new Error("invalid status");
 
     current.heartbeat_at = new Date(this.clock()).toISOString();
-    if (status) current.status = status;
+    if (status !== undefined) current.status = status;
+    else if (current.status === "offline") current.status = "available";
     return clone(current);
   }
 
@@ -35,13 +48,23 @@ export class PresenceRegistry {
 
     for (const record of this.records.values()) {
       const last = Date.parse(record.heartbeat_at);
-      if (Number.isFinite(last) && now - last > this.offlineAfterMs && record.status !== "offline") {
-        record.status = "offline";
-        changed.push(record.participant_id);
+      if (!Number.isFinite(last) || now - last > this.offlineAfterMs) {
+        if (record.status !== "offline") {
+          record.status = "offline";
+          changed.push(record.participant_id);
+        }
       }
     }
 
     return changed;
+  }
+
+  isFresh(participantId, atMs = this.clock()) {
+    const record = this.records.get(participantId);
+    if (!record || record.status === "offline") return false;
+
+    const last = Date.parse(record.heartbeat_at);
+    return Number.isFinite(last) && atMs - last <= this.offlineAfterMs;
   }
 
   get(participantId) {
@@ -54,14 +77,22 @@ export class PresenceRegistry {
   }
 }
 
-export function canPresenceExecute({ presence, grant, permission, at = new Date() }) {
-  if (!presence || presence.status === "offline" || !grant || !permission) return false;
+export function canPresenceExecute({
+  registry,
+  participantId,
+  grant,
+  permission,
+  resourceRef,
+  at = new Date()
+}) {
+  if (!registry || !participantId || !grant || !permission || !resourceRef) return false;
 
-  const acceptedSubjects = new Set([
-    presence.participant_id,
-    `participant:${presence.participant_id}`
-  ]);
+  const presence = registry.get(participantId);
+  if (!presence) return false;
+  if (!registry.isFresh(participantId, at.getTime())) return false;
+  if (presence.status === "offline") return false;
+  if (grant.subject_ref !== participantId) return false;
+  if (grant.resource_ref !== resourceRef) return false;
 
-  if (!acceptedSubjects.has(grant.subject_ref)) return false;
   return can(grant, permission, at);
 }
