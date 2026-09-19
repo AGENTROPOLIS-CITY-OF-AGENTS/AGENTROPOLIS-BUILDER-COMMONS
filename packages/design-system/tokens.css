@@ -1,0 +1,44 @@
+:root {
+  color-scheme: dark;
+
+  /* AGENTROPOLIS core */
+  --ag-obsidian-950: #040608;
+  --ag-obsidian-900: #080c10;
+  --ag-obsidian-800: #0d141a;
+  --ag-panel: rgba(9, 16, 22, 0.72);
+  --ag-panel-strong: rgba(8, 12, 16, 0.9);
+  --ag-border: rgba(88, 235, 255, 0.22);
+
+  --ag-cyan: #34e8ff;
+  --ag-cyan-soft: #8ff4ff;
+  --ag-red: #ff3b3b;
+  --ag-red-hot: #ff205e;
+  --ag-lime: #9dff42;
+  --ag-pink: #ff35bf;
+  --ag-purple: #9a59ff;
+
+  --ag-text: #edfaff;
+  --ag-text-muted: #8ea9b4;
+  --ag-success: #6dffb1;
+  --ag-warning: #ffd166;
+  --ag-danger: #ff5d73;
+
+  --ag-radius-sm: 10px;
+  --ag-radius-md: 18px;
+  --ag-radius-lg: 28px;
+
+  --ag-shadow-cyan: 0 0 32px rgba(52, 232, 255, 0.16);
+  --ag-shadow-red: 0 0 32px rgba(255, 59, 59, 0.14);
+
+  --ag-space-1: 0.25rem;
+  --ag-space-2: 0.5rem;
+  --ag-space-3: 0.75rem;
+  --ag-space-4: 1rem;
+  --ag-space-6: 1.5rem;
+  --ag-space-8: 2rem;
+  --ag-space-12: 3rem;
+
+  --ag-font-display: "Space Grotesk", "Inter", system-ui, sans-serif;
+  --ag-font-ui: "Inter", system-ui, sans-serif;
+  --ag-font-mono: "IBM Plex Mono", "SFMono-Regular", Consolas, monospace;
+}
