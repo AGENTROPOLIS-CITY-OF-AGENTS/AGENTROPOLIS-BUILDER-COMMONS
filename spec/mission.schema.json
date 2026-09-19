@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentropolis.dev/spec/builder-commons/mission.schema.json",
+  "title": "Builder Commons Mission",
+  "type": "object",
+  "required": ["schema_version", "mission_id", "source", "summary", "status"],
+  "properties": {
+    "schema_version": { "type": "string", "const": "0.1" },
+    "mission_id": { "type": "string" },
+    "source": { "type": "string" },
+    "source_ref": { "type": ["string", "null"] },
+    "summary": { "type": "string" },
+    "required_capabilities": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+    "reward": {
+      "type": ["object", "null"],
+      "properties": {
+        "amount": { "type": "string" },
+        "asset": { "type": "string" },
+        "settlement_policy_ref": { "type": ["string", "null"] }
+      },
+      "additionalProperties": false
+    },
+    "status": { "type": "string", "enum": ["open", "matched", "accepted", "building", "verifying", "completed", "cancelled"] },
+    "project_ref": { "type": ["string", "null"] },
+    "metadata": { "type": "object", "additionalProperties": true }
+  },
+  "additionalProperties": false
+}
