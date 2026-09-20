@@ -84,7 +84,7 @@ export function createCbeBridge({ eventLog = null } = {}) {
         typeof verification.receipt_ref !== "string" ||
         verification.receipt_ref.length === 0
       ) {
-        throw new Error("contribution evidence must contain complete recorded VERIFIED evidence before it can be emitted to CBE");
+        throw new Error("contribution evidence must be in a complete recorded VERIFIED state before it can be emitted to CBE");
       }
 
       const payload = {
