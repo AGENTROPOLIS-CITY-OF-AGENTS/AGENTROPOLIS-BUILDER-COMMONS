@@ -55,14 +55,17 @@ Goal: a builder can enter, connect source, spawn a project space, invite a parti
 
 ## Phase 4 — BYOE + compute
 
-- capability broker
-- local hardware registration
-- compute broker
-- model provider adapters
-- runtime adapters
-- subscription-aware routing
-- sandbox execution
-- cost / quota policy
+- [x] capability-gated compute reservation
+- [x] local / community / cloud / edge hardware registration
+- [x] compute broker / router
+- [x] provider-neutral model adapter contract
+- [x] provider-neutral runtime adapter contract
+- [x] local-first + subscription-aware routing
+- [x] fail-closed sandbox policy
+- [x] cost / quota policy
+- [ ] production compute executors
+- [ ] live provider adapters
+- [ ] execution receipt persistence
 
 ## Phase 5 — Spatial interface
 
