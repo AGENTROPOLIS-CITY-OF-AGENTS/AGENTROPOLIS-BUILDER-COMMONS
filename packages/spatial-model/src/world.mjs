@@ -5,13 +5,24 @@
 
 const ZONE_TYPES = new Set(["atrium","project","forge","guild","agent-dock","compute-dock","broadcast","xr"]);
 const STATUS = new Set(["idle","available","working","reviewing","blocked","offline"]);
+const MAX_ZONES = 128;
+const MAX_MARKERS = 512;
+const MAX_LABEL_LENGTH = 160;
+const MAX_METADATA_BYTES = 32768;
 
 function clone(value) {
   return JSON.parse(JSON.stringify(value));
 }
 
-function requireString(value, name) {
+function requireString(value, name, maxLength = MAX_LABEL_LENGTH) {
   if (typeof value !== "string" || value.trim().length === 0) throw new Error(`${name} is required`);
+  if (value.length > maxLength) throw new Error(`${name} exceeds maximum length`);
+}
+
+function assertSerializableMetadata(metadata) {
+  let encoded;
+  try { encoded = JSON.stringify(metadata); } catch { throw new Error("metadata must be JSON-serializable"); }
+  if (encoded.length > MAX_METADATA_BYTES) throw new Error("metadata exceeds maximum size");
 }
 
 function finite(value, name) {
@@ -24,6 +35,7 @@ export function createSpatialWorld({ worldId, label = "Builder Commons", metadat
   if (metadata === null || typeof metadata !== "object" || Array.isArray(metadata)) {
     throw new Error("metadata must be an object");
   }
+  assertSerializableMetadata(metadata);
   return {
     schema_version: "0.1",
     world_id: worldId,
@@ -48,6 +60,7 @@ export function addSpatialZone(world, {
   requireString(zoneId, "zoneId");
   requireString(label, "label");
   if (!ZONE_TYPES.has(type)) throw new Error("unsupported spatial zone type");
+  if (world.zones.length >= MAX_ZONES) throw new Error("spatial zone limit exceeded");
   if (!STATUS.has(status)) throw new Error("unsupported spatial status");
   if (projectRef !== null) requireString(projectRef, "projectRef");
   if (roomRef !== null) requireString(roomRef, "roomRef");
@@ -83,6 +96,7 @@ export function addPresenceMarker(world, {
   requireString(zoneId, "zoneId");
   requireString(displayName, "displayName");
   if (!["human","agent","service"].includes(participantType)) throw new Error("unsupported participant type");
+  if (world.markers.length >= MAX_MARKERS) throw new Error("spatial marker limit exceeded");
   if (!STATUS.has(status)) throw new Error("unsupported spatial status");
   if (!world.zones.some((zone) => zone.zone_id === zoneId)) throw new Error("spatial zone not found");
   if (world.markers.some((marker) => marker.marker_id === markerId)) throw new Error("spatial marker already exists");
@@ -100,6 +114,8 @@ export function addPresenceMarker(world, {
 }
 
 export function projectSpatialWorld({ room = null, manifest = null, presences = [] } = {}) {
+  if (!Array.isArray(presences)) throw new Error("presences must be an array");
+  if (presences.length > MAX_MARKERS) throw new Error("spatial marker limit exceeded");
   const world = createSpatialWorld({
     worldId: "builder-commons",
     label: "Builder Commons"
