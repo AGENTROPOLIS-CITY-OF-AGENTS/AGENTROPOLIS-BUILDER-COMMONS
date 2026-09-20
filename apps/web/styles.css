@@ -374,3 +374,28 @@ footer {
   .spatial-layout { grid-template-columns: 1fr; }
   .spatial-stage { min-height: 340px; }
 }
+
+
+/* ---------- Accessibility / motion ---------- */
+button:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid var(--ag-cyan);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: .001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .001ms !important;
+  }
+  .spatial-grid {
+    transform: none;
+  }
+  .spatial-zone {
+    transform: none;
+  }
+}
