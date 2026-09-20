@@ -23,6 +23,9 @@ const OPPORTUNITY_STATUSES = new Set([
 
 function assertOpportunity(opportunity) {
   if (!opportunity?.opportunity_id) throw new Error("opportunity_id is required");
+  if (opportunity.schema_version !== "0.1") {
+    throw new Error(`opportunity schema_version must be "0.1"`);
+  }
   if (!OPPORTUNITY_SOURCES.has(opportunity.source)) {
     throw new Error(`unsupported opportunity source: ${opportunity.source}`);
   }
@@ -60,10 +63,18 @@ export function createCbeBridge({ eventLog = null } = {}) {
 
     // Commons -> CBE: emit verified contribution evidence as a CBE-consumable
     // payload. CBE consumes this; it does not own room state.
-    emitContribution({ contribution, verification = null }) {
+    //
+    // FAIL CLOSED: only evidence whose RECORDED verification state is
+    // "verified" may be emitted. Caller-supplied verification data is never
+    // accepted — the recorded evidence state is authoritative, so a caller
+    // cannot claim verification that the evidence does not carry.
+    emitContribution({ contribution }) {
       if (!contribution?.evidence_id) throw new Error("contribution evidence_id is required");
       if (!contribution?.project_id) throw new Error("contribution project_id is required");
       if (!contribution?.contributor_ref) throw new Error("contribution contributor_ref is required");
+      if (contribution.verification?.status !== "verified") {
+        throw new Error("contribution evidence must be in a recorded VERIFIED state before it can be emitted to CBE");
+      }
 
       const payload = {
         schema_version: "0.1",
@@ -73,11 +84,11 @@ export function createCbeBridge({ eventLog = null } = {}) {
         contribution_type: contribution.contribution_type,
         summary: contribution.summary || "",
         evidence: contribution.evidence || [],
-        verification: verification || contribution.verification || {
-          status: "unverified",
-          verifier_ref: null,
-          verified_at: null,
-          receipt_ref: null
+        verification: {
+          status: contribution.verification.status,
+          verifier_ref: contribution.verification.verifier_ref ?? null,
+          verified_at: contribution.verification.verified_at ?? null,
+          receipt_ref: contribution.verification.receipt_ref ?? null
         }
       };
       emit("evidence.recorded", {

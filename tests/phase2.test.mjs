@@ -97,6 +97,7 @@ test("CBE bridge attaches an opportunity reference to a room", () => {
   const result = bridge.attachOpportunity({
     room,
     opportunity: {
+      schema_version: "0.1",
       opportunity_id: "opp-1",
       source: "cbe",
       summary: "Build the corridor",
@@ -111,8 +112,8 @@ test("CBE bridge attaches an opportunity reference to a room", () => {
 test("CBE bridge rejects malformed opportunities", () => {
   const bridge = createCbeBridge();
   const room = createProjectRoom({ roomId: "room-1", projectId: "project-1" });
-  assert.throws(() => bridge.attachOpportunity({ room, opportunity: { opportunity_id: "o", source: "bad", summary: "x", status: "open" } }), /unsupported opportunity source/);
-  assert.throws(() => bridge.attachOpportunity({ room, opportunity: { opportunity_id: "o", source: "cbe", summary: "", status: "open" } }), /summary is required/);
+  assert.throws(() => bridge.attachOpportunity({ room, opportunity: { schema_version: "0.1", opportunity_id: "o", source: "bad", summary: "x", status: "open" } }), /unsupported opportunity source/);
+  assert.throws(() => bridge.attachOpportunity({ room, opportunity: { schema_version: "0.1", opportunity_id: "o", source: "cbe", summary: "", status: "open" } }), /summary is required/);
 });
 
 test("CBE bridge emits verified contribution evidence for CBE consumption", () => {
@@ -196,7 +197,7 @@ test("GitHub adapter denies access when the broker credential is revoked", async
 
   const requestJson = async () => ({ login: "builder", id: 54 });
   const adapter = createGitHubAdapter({ credentialBroker: broker, credentialId: "gh-cred", requestJson });
-  await assert.rejects(() => adapter.connect(), /not active/);
+  await assert.rejects(() => adapter.connect(), /revoked/);
 });
 
 test("GitHub adapter requires a credential source", () => {

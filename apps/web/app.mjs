@@ -281,6 +281,18 @@ function renderAll() {
 // Corridor actions
 // ---------------------------------------------------------------------------
 function spawnDemoCorridor() {
+  // P2-7: on respawn, reset the event log + demo room so no stale duplicate
+  // activity accumulates across clicks. The event log is append-only, so we
+  // replace it with a fresh instance rather than mutating it.
+  state.eventLog = new EventLog();
+  state.cbeBridge = null;
+  state.hermesAdapter = null;
+  state.room = null;
+  state.manifest = null;
+  state.grant = null;
+  state.contribution = null;
+  state.opportunity = null;
+
   // 1. Import a repository through the GitHub adapter (MOCK credential provider)
   const mockCredentialProvider = async () => "gho_mock_demo_token_never_persisted";
   const requestJson = async (url) => {
@@ -363,6 +375,7 @@ function spawnDemoCorridor() {
 
   // Phase 2: attach a CBE opportunity and emit verified evidence to CBE
   state.opportunity = {
+    schema_version: "0.1",
     opportunity_id: "opp-1",
     source: "cbe",
     summary: "Build the integrated corridor",

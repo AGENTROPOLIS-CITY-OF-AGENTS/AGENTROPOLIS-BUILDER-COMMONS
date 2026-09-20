@@ -175,3 +175,17 @@ test("Phase 2: CBE bridge, Hermes adapter, and event log wire into the shell", (
   const hermes = INTEGRATIONS.find((i) => i.id === "hermes");
   assert.equal(hermes.status, "available");
 });
+
+test("P2-7 respawning the demo room does not accumulate stale duplicate events", () => {
+  // First spawn.
+  spawnDemoCorridor();
+  const firstCount = state.eventLog.count();
+  assert.ok(firstCount >= 4, "first spawn must record lifecycle events");
+
+  // Second spawn (respawn of the fixed demo room).
+  spawnDemoCorridor();
+  const secondCount = state.eventLog.count();
+  assert.equal(secondCount, firstCount, "respawn must reset the event log, not duplicate stale entries");
+  const types = state.eventLog.list().map((e) => e.type);
+  assert.equal(types.filter((t) => t === "room.created").length, 1, "room.created must appear exactly once per fresh respawn");
+});

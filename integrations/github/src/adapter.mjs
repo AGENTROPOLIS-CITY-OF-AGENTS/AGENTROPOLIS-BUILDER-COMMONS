@@ -37,11 +37,24 @@ export function createGitHubAdapter({
 
   let connection = null;
 
+  const GITHUB_SCOPE = "repo";
+
   async function accessToken() {
     // Prefer the credential broker (BYOK): temporary, scoped, revocable, expiring.
+    // Verify the credential is GitHub-compatible AND covers the required scope
+    // BEFORE retrieving or transmitting any secret.
     if (credentialBroker && credentialId) {
-      const token = credentialBroker.get(credentialId);
-      if (!token) throw new Error("GitHub credential is not active (missing, revoked, or expired)");
+      const broker = credentialBroker;
+      const described = broker.describe ? broker.describe(credentialId) : null;
+      if (!described) throw new Error("GitHub credential not found");
+      if (described.provider !== "github") {
+        throw new Error("GitHub credential provider mismatch: expected github, got " + described.provider);
+      }
+      if (described.revoked_at) throw new Error("GitHub credential is revoked");
+      const token = broker.getIfCompatible
+        ? broker.getIfCompatible(credentialId, { provider: "github", requiredScope: GITHUB_SCOPE })
+        : (described.scope === GITHUB_SCOPE ? broker.get(credentialId) : null);
+      if (!token) throw new Error("GitHub credential is not active or does not cover required scope");
       return token;
     }
     const token = typeof credentialProvider === "function"
@@ -61,6 +74,10 @@ export function createGitHubAdapter({
         "X-GitHub-Api-Version": "2022-11-28"
       }
     });
+  }
+
+  function deepClone(value) {
+    return JSON.parse(JSON.stringify(value));
   }
 
   function normalizeRepo(repo) {
@@ -84,7 +101,7 @@ export function createGitHubAdapter({
         connected: true,
         account: { login: account.login, id: account.id }
       };
-      return { ...connection };
+      return deepClone(connection);
     },
 
     async disconnect() {
@@ -94,7 +111,7 @@ export function createGitHubAdapter({
 
     connectionState() {
       return connection
-        ? { ...connection }
+        ? deepClone(connection)
         : { provider: "github", connected: false };
     },
 
