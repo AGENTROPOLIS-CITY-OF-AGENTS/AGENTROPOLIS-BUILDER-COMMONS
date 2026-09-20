@@ -40,6 +40,7 @@ const required = [
   "packages/spatial-model/src/world.mjs",
   "packages/spatial-model/src/interior.mjs",
   "packages/renderer-adapter/src/contract.mjs",
+  "packages/xr-client/src/controller.mjs",
   "integrations/cbe/src/bridge.mjs",
   "integrations/hermes/src/adapter.mjs",
   "integrations/webrtc/src/adapter.mjs",
