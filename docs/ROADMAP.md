@@ -81,6 +81,8 @@ Goal: a builder can enter, connect source, spawn a project space, invite a parti
 - [x] project-room spatial interiors
 - [x] WebXR adapter
 - [x] browser AR / VR client controllers
+- [x] accessibility / 2D parity closeout
+- [x] 54T / VERITY assurance specification
 
 ## Phase 6 — Economic rails
 
