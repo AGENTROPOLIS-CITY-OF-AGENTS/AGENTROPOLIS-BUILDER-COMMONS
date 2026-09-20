@@ -203,3 +203,69 @@ test("GitHub adapter denies access when the broker credential is revoked", async
 test("GitHub adapter requires a credential source", () => {
   assert.throws(() => createGitHubAdapter({ requestJson: async () => ({}) }), /credentialProvider or/);
 });
+
+
+test("credential broker hides raw credential storage and rejects independent scopes for repo access", () => {
+  const broker = new CredentialBroker();
+  broker.store({ credentialId: "workflow-only", provider: "github", secret: "secret-a", scope: "workflow" });
+  broker.store({ credentialId: "gist-only", provider: "github", secret: "secret-b", scope: "gist" });
+  assert.equal(broker.credentials, undefined, "raw credential map must not be publicly reachable");
+  assert.equal(broker.getIfCompatible("workflow-only", { provider: "github", requiredScope: "repo" }), null);
+  assert.equal(broker.getIfCompatible("gist-only", { provider: "github", requiredScope: "repo" }), null);
+});
+
+test("event log internal storage cannot be mutated by consumers", () => {
+  const log = new EventLog();
+  log.append({ type: "system", payload: { value: 1 } });
+  assert.equal(log.events, undefined, "raw event storage must be private");
+  const listed = log.list();
+  listed[0].payload.value = 99;
+  listed.pop();
+  assert.equal(log.count(), 1);
+  assert.equal(log.list()[0].payload.value, 1);
+  const next = log.append({ type: "system", payload: { value: 2 } });
+  assert.equal(next.event_id, "evt-2");
+});
+
+test("CBE bridge rejects malformed opportunity ids before room mutation", () => {
+  const bridge = createCbeBridge();
+  for (const bad of [42, [], {}, null, ""]) {
+    const room = createProjectRoom({ roomId: "room-bad", projectId: "project-bad" });
+    assert.throws(
+      () => bridge.attachOpportunity({
+        room,
+        opportunity: {
+          schema_version: "0.1",
+          opportunity_id: bad,
+          source: "cbe",
+          summary: "Bad id",
+          status: "open"
+        }
+      }),
+      /opportunity_id/
+    );
+    assert.deepEqual(room.opportunity_refs, []);
+  }
+});
+
+test("CBE bridge rejects fabricated or incomplete verified evidence", () => {
+  const bridge = createCbeBridge();
+  const contribution = createContributionEvidence({
+    evidenceId: "evidence-fake",
+    projectId: "project-1",
+    contributorRef: "agent:fake",
+    contributionType: "code",
+    evidence: [{ kind: "commit", ref: "deadbeef", hash: null }]
+  });
+
+  contribution.verification = { status: "verified" };
+  assert.throws(() => bridge.emitContribution({ contribution }), /complete recorded VERIFIED evidence/);
+
+  contribution.verification = {
+    status: "verified",
+    verifier_ref: "human:reviewer",
+    verified_at: new Date().toISOString(),
+    receipt_ref: ""
+  };
+  assert.throws(() => bridge.emitContribution({ contribution }), /complete recorded VERIFIED evidence/);
+});
