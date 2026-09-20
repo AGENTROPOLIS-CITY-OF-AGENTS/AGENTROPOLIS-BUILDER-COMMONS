@@ -49,6 +49,14 @@ export function leaveRealtimeSession(session, participantRef) {
 
 export function setRealtimeSessionStatus(session, status) {
   if (!SESSION_STATUSES.has(status)) throw new Error("unsupported session status");
+  if (status === "ended") {
+    if (session.recording?.enabled === true) {
+      throw new Error("cannot end session while recording is active");
+    }
+    if (["ready","live","paused"].includes(session.broadcast?.status)) {
+      throw new Error("cannot end session while broadcast is active");
+    }
+  }
   session.status = status;
   return clone(session);
 }
@@ -57,6 +65,7 @@ export function approveSurface(session, { surfaceId, kind, ownerRef, label = nul
   requireId(surfaceId, "surfaceId");
   requireId(ownerRef, "ownerRef");
   if (!SURFACE_KINDS.has(kind)) throw new Error("unsupported surface kind");
+  if (label !== null && typeof label !== "string") throw new Error("surface label must be a string or null");
   if (session.approved_surfaces.some((surface) => surface.surface_id === surfaceId)) {
     throw new Error("surface already approved");
   }
@@ -91,7 +100,11 @@ export function addPointer(session, { participantRef, surfaceId, x, y }) {
     throw new Error("pointer coordinates must be normalized");
   }
   const pointer = { participant_ref: participantRef, surface_id: surfaceId, x, y };
-  session.pointers.push(pointer);
+  const index = session.pointers.findIndex(
+    (item) => item.participant_ref === participantRef && item.surface_id === surfaceId
+  );
+  if (index === -1) session.pointers.push(pointer);
+  else session.pointers[index] = pointer;
   return clone(pointer);
 }
 
@@ -111,9 +124,14 @@ export function addAnnotation(session, { participantRef, surfaceId, text }) {
 }
 
 export function setRecording(session, { enabled, recordingRef = null }) {
+  if (typeof enabled !== "boolean") throw new Error("recording enabled must be boolean");
+  if (recordingRef !== null && (typeof recordingRef !== "string" || recordingRef.length === 0)) {
+    throw new Error("recordingRef must be a non-empty string or null");
+  }
+  const previousRef = session.recording?.recording_ref ?? null;
   session.recording = {
-    enabled: Boolean(enabled),
-    recording_ref: enabled ? recordingRef : null
+    enabled,
+    recording_ref: recordingRef ?? previousRef
   };
   return clone(session.recording);
 }
