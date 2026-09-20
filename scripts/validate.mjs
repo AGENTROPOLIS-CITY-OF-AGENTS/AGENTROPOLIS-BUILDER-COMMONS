@@ -39,9 +39,11 @@ const required = [
   "packages/execution-receipt/src/receipt.mjs",
   "packages/spatial-model/src/world.mjs",
   "packages/spatial-model/src/interior.mjs",
+  "packages/renderer-adapter/src/contract.mjs",
   "integrations/cbe/src/bridge.mjs",
   "integrations/hermes/src/adapter.mjs",
   "integrations/webrtc/src/adapter.mjs",
+  "integrations/dom-renderer/src/renderer.mjs",
   "apps/web/index.html",
   "apps/web/app.mjs",
   "apps/web/styles.css"
