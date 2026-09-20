@@ -19,6 +19,13 @@ function requireString(value, name, maxLength = MAX_LABEL_LENGTH) {
   if (value.length > maxLength) throw new Error(`${name} exceeds maximum length`);
 }
 
+function requireSafeId(value, name) {
+  requireString(value, name, 200);
+  if (!/^[A-Za-z0-9][A-Za-z0-9._:-]*$/.test(value)) {
+    throw new Error(`${name} contains unsupported characters`);
+  }
+}
+
 function assertSerializableMetadata(metadata) {
   let encoded;
   try { encoded = JSON.stringify(metadata); } catch { throw new Error("metadata must be JSON-serializable"); }
@@ -57,7 +64,7 @@ export function addSpatialZone(world, {
   z = 0,
   status = "idle"
 }) {
-  requireString(zoneId, "zoneId");
+  requireSafeId(zoneId, "zoneId");
   requireString(label, "label");
   if (!ZONE_TYPES.has(type)) throw new Error("unsupported spatial zone type");
   if (world.zones.length >= MAX_ZONES) throw new Error("spatial zone limit exceeded");
@@ -91,7 +98,7 @@ export function addPresenceMarker(world, {
   displayName,
   status = "idle"
 }) {
-  requireString(markerId, "markerId");
+  requireSafeId(markerId, "markerId");
   requireString(participantRef, "participantRef");
   requireString(zoneId, "zoneId");
   requireString(displayName, "displayName");
