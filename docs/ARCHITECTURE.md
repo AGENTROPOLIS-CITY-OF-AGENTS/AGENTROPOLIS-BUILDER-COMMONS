@@ -377,3 +377,37 @@ Every navigationally or operationally meaningful spatial object must have an acc
 ### Provider neutrality
 
 The spatial model is renderer-neutral. Future Three.js, WebGPU, WebXR, native XR, or other renderers consume the projection contract rather than becoming dependencies of Builder Commons core.
+
+
+## 13. Spatial project-room interiors and functional zones
+
+Project-room interiors are projection contracts over canonical room/project state. They contain safe references and interaction intents, not privileged executors.
+
+Projected interior surfaces include:
+- Project Lobby
+- Repository nodes
+- Task Board
+- Evidence Wall
+- Receipt / Audit Desk
+- Collaboration Table
+- Build Status
+- Broadcast / Media Area
+- Forge
+- Agent Dock
+- Compute Dock
+- Broadcast Tower
+- XR Portal
+
+### Intent boundary
+
+Spatial interaction emits intent such as `request-build`, `request-review`, `inspect-compute-resource`, or `request-xr-mode`.
+
+The projection does not execute those actions. Requests must cross the normal governed authority corridor before any privileged effect occurs.
+
+### Safe-reference rule
+
+Interior state contains references and bounded summaries. It must never contain raw capability grants, API keys, provider credentials, wallet keys, private agent memory, hidden-window state, or media capture handles.
+
+### Parity rule
+
+Every projected interior node is represented in accessible 2D parity. A renderer may add spectacle, but it cannot remove the ordinary navigational path.
