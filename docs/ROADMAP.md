@@ -69,14 +69,16 @@ Goal: a builder can enter, connect source, spawn a project space, invite a parti
 
 ## Phase 5 — Spatial interface
 
-- 3D Builder Atrium
-- project buildings
-- project rooms
-- status visualization
-- agent avatars / status markers
-- accessible 2D parity
-- WebXR
-- AR / VR clients
+- [x] provider-neutral spatial projection model
+- [x] Builder Atrium spatial surface foundation
+- [x] project buildings projected from canonical project-room state
+- [x] status visualization
+- [x] human / agent presence markers
+- [x] accessible 2D parity
+- [ ] richer 3D scene renderer
+- [ ] project-room spatial interiors
+- [ ] WebXR adapter
+- [ ] AR / VR clients
 
 ## Phase 6 — Economic rails
 
