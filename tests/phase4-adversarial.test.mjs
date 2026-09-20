@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { ComputeRegistry } from "../packages/compute-registry/src/registry.mjs";
 import { routeCompute } from "../packages/compute-router/src/router.mjs";
 import { issueCapabilityGrant, revoke } from "../packages/capability-broker/src/grant.mjs";
+import { GrantStore } from "../packages/capability-broker/src/grant-store.mjs";
 import { createSandboxPolicy, authorizeSandboxRequest } from "../packages/sandbox-policy/src/policy.mjs";
 import { createQuotaPolicy, QuotaLedger } from "../packages/quota-policy/src/policy.mjs";
 import { invokeGovernedModel, assertModelAdapter } from "../packages/model-adapter/src/contract.mjs";
@@ -444,4 +445,57 @@ test("execution receipt emits a complete, evidence-backed record", () => {
   assert.equal(receipt.status, "succeeded");
   assert.equal(receipt.cost_micros, 750);
   assert.deepEqual(receipt.evidence_refs, ["evidence:run-42"]);
+});
+
+// ---------------------------------------------------------------------------
+// 54T Finding A: grant forgery (added-permission escalation) is closed by the
+// trusted GrantStore
+// ---------------------------------------------------------------------------
+test("54T-A forged grant object cannot escalate when the gate uses a GrantStore", () => {
+  const store = new GrantStore();
+  store.issue({ grantId: "g1", subjectRef: "agent:a", resourceRef: "gpu-1", permissions: ["compute:release"] });
+
+  const registry = new ComputeRegistry();
+  registry.register({ resourceId: "gpu-1", ownerRef: "human:neuro", providerType: "local", capabilities: { gpu: "GPU", vram_gb: 24 }, sandbox: { required: true, modes: ["isolated"] } });
+
+  // Attacker deep-copies the grant object and appends compute:reserve.
+  const forged = { ...store.get("g1"), permissions: ["compute:release", "compute:reserve"] };
+  // The gate resolves from the STORE (grantId), not the forged object.
+  assert.throws(
+    () => registry.reserve({ resourceId: "gpu-1", subjectRef: "agent:a", grant: forged, grantStore: store, grantId: "g1" }),
+    /denied by capability policy/,
+    "a forged object with an added permission must not escalate through the store"
+  );
+  assert.equal(registry.get("gpu-1").status, "available");
+});
+
+test("54T-A GrantStore can() resolves permissions from the authoritative record only", () => {
+  const store = new GrantStore();
+  store.issue({ grantId: "g1", subjectRef: "agent:a", resourceRef: "gpu-1", permissions: ["compute:release"] });
+  assert.equal(store.can("g1", "compute:release"), true);
+  assert.equal(store.can("g1", "compute:reserve"), false, "a permission never issued must never resolve");
+  // Mutating a returned copy does not change the store.
+  const copy = store.get("g1");
+  copy.permissions.push("compute:reserve");
+  assert.equal(store.can("g1", "compute:reserve"), false);
+});
+
+// ---------------------------------------------------------------------------
+// 54T Finding B: unauthorized release by a non-owner is denied
+// ---------------------------------------------------------------------------
+test("54T-B a different subject with its own release grant cannot release another's reservation", () => {
+  const registry = new ComputeRegistry();
+  registry.register({ resourceId: "gpu-1", ownerRef: "human:neuro", providerType: "local", capabilities: { gpu: "GPU", vram_gb: 24 }, sandbox: { required: true, modes: ["isolated"] } });
+
+  const ownerGrant = issueCapabilityGrant({ grantId: "g-owner", subjectRef: "agent:a", resourceRef: "gpu-1", permissions: ["compute:reserve", "compute:release"] });
+  const res = registry.reserve({ resourceId: "gpu-1", subjectRef: "agent:a", grant: ownerGrant });
+
+  // Attacker has its OWN valid compute:release grant on the same resource.
+  const attackerGrant = issueCapabilityGrant({ grantId: "g-attacker", subjectRef: "agent:attacker", resourceRef: "gpu-1", permissions: ["compute:release"] });
+  assert.throws(
+    () => registry.release({ reservationId: res.reservation_id, subjectRef: "agent:attacker", grant: attackerGrant }),
+    /only the reservation owner may release/,
+    "a non-owner with a valid release grant must not release another's reservation"
+  );
+  assert.equal(registry.get("gpu-1").status, "reserved", "the reservation must remain intact");
 });

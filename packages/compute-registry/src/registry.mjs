@@ -1,5 +1,17 @@
 import { can } from "../../capability-broker/src/grant.mjs";
 
+// Resolve authority from a trusted GrantStore (by grant_id) when provided; the
+// store is authoritative and immune to caller-presented-object forgery.
+function resolveGrant({ grantStore, grantId, grant, subjectRef, resourceRef, permission, at = new Date() }) {
+  if (grantStore && grantId) {
+    const record = grantStore.get(grantId);
+    if (!record) return false;
+    if (record.subject_ref !== subjectRef || record.resource_ref !== resourceRef) return false;
+    return grantStore.can(grantId, permission, at);
+  }
+  return Boolean(grant && grant.subject_ref === subjectRef && grant.resource_ref === resourceRef && can(grant, permission, at));
+}
+
 const PROVIDER_TYPES = new Set(["local", "community", "cloud", "edge"]);
 const STATUSES = new Set(["offline", "available", "reserved", "busy", "draining"]);
 const SECRET_KEY = /(api[_-]?key|access[_-]?token|access[_-]?secret|secret|token|password|passwd|private[_-]?key|credential|creds|auth|wallet)/i;
@@ -117,12 +129,12 @@ export class ComputeRegistry {
     return clone(resource);
   }
 
-  reserve({ resourceId, subjectRef, grant, expiresAt = null }) {
+  reserve({ resourceId, subjectRef, grant, grantStore = null, grantId = null, expiresAt = null }) {
     requireString(subjectRef, "subjectRef");
     const resource = this.#resources.get(resourceId);
     if (!resource) throw new Error("compute resource not found");
     if (resource.status !== "available") throw new Error("compute resource is not available");
-    if (!grant || grant.subject_ref !== subjectRef || grant.resource_ref !== resourceId || !can(grant, "compute:reserve")) {
+    if (!resolveGrant({ grantStore, grantId, grant, subjectRef, resourceRef: resourceId, permission: "compute:reserve" })) {
       throw new Error("compute reservation denied by capability policy");
     }
     if (expiresAt !== null && Number.isNaN(Date.parse(expiresAt))) {
@@ -142,16 +154,17 @@ export class ComputeRegistry {
     return clone(reservation);
   }
 
-  release({ reservationId, subjectRef, grant }) {
+  release({ reservationId, subjectRef, grant, grantStore = null, grantId = null }) {
     const reservation = this.#reservations.get(reservationId);
     if (!reservation || reservation.released_at) return false;
-    if (
-      !grant ||
-      grant.subject_ref !== subjectRef ||
-      grant.resource_ref !== reservation.resource_id ||
-      !can(grant, "compute:release")
-    ) {
+    if (!resolveGrant({ grantStore, grantId, grant, subjectRef, resourceRef: reservation.resource_id, permission: "compute:release" })) {
       throw new Error("compute release denied by capability policy");
+    }
+    // Only the reservation owner may release it. A different subject holding
+    // its own compute:release grant on the resource must NOT be able to release
+    // another agent's reservation (prevents cross-agent release DoS).
+    if (subjectRef !== reservation.subject_ref) {
+      throw new Error("compute release denied: only the reservation owner may release");
     }
 
     reservation.released_at = new Date(this.clock()).toISOString();

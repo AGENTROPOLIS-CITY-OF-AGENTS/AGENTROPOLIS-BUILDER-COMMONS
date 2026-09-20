@@ -22,6 +22,7 @@ const required = [
   "spec/realtime-session.schema.json",
   "packages/design-system/tokens.css",
   "packages/credential-broker/src/broker.mjs",
+  "packages/capability-broker/src/grant-store.mjs",
   "packages/events/src/event-log.mjs",
   "packages/realtime/src/session.mjs",
   "packages/realtime/src/handoff.mjs",
