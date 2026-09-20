@@ -411,3 +411,22 @@ Interior state contains references and bounded summaries. It must never contain 
 ### Parity rule
 
 Every projected interior node is represented in accessible 2D parity. A renderer may add spectacle, but it cannot remove the ordinary navigational path.
+
+
+## 14. Renderer adapter boundary
+
+Spatial projection state is consumed through a renderer-neutral contract. Renderers are replaceable presentation adapters and are not trusted authority components.
+
+Required renderer lifecycle:
+- mount
+- renderWorld
+- updateWorld
+- focusZone
+- selectEntity
+- dispose
+
+The renderer receives sanitized projection data only. It must never receive raw credential stores, capability stores, wallet secrets, private agent memory, or authoritative service handles.
+
+The first concrete renderer is the safe DOM/CSS fallback. Untrusted labels and participant names are written with DOM text APIs rather than concatenated HTML.
+
+Renderer selection does not change canonical state and does not grant execution authority. A renderer may emit a selection intent, which must still pass the governed execution corridor before any privileged effect occurs.
