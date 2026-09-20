@@ -1,0 +1,99 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentropolis.dev/spec/builder-commons/realtime-session.schema.json",
+  "title": "Builder Commons Realtime Collaboration Session",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "session_id",
+    "room_ref",
+    "status",
+    "created_by",
+    "participants",
+    "approved_surfaces",
+    "pointers",
+    "annotations",
+    "recording",
+    "broadcast",
+    "metadata"
+  ],
+  "properties": {
+    "schema_version": { "type": "string", "const": "0.1" },
+    "session_id": { "type": "string", "minLength": 1 },
+    "room_ref": { "type": "string", "minLength": 1 },
+    "status": { "type": "string", "enum": ["draft","active","paused","ended"] },
+    "created_by": { "type": "string", "minLength": 1 },
+    "participants": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 },
+      "uniqueItems": true
+    },
+    "approved_surfaces": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["surface_id","kind","owner_ref","approved","label"],
+        "properties": {
+          "surface_id": { "type": "string", "minLength": 1 },
+          "kind": { "type": "string", "enum": ["screen","window","terminal","browser","app","camera","microphone","spatial","agent-status"] },
+          "owner_ref": { "type": "string", "minLength": 1 },
+          "label": { "type": ["string","null"] },
+          "approved": { "type": "boolean", "const": true }
+        },
+        "additionalProperties": false
+      }
+    },
+    "pointers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["participant_ref","surface_id","x","y"],
+        "properties": {
+          "participant_ref": { "type": "string", "minLength": 1 },
+          "surface_id": { "type": "string", "minLength": 1 },
+          "x": { "type": "number", "minimum": 0, "maximum": 1 },
+          "y": { "type": "number", "minimum": 0, "maximum": 1 }
+        },
+        "additionalProperties": false
+      }
+    },
+    "annotations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["annotation_id","participant_ref","surface_id","text"],
+        "properties": {
+          "annotation_id": { "type": "string", "minLength": 1 },
+          "participant_ref": { "type": "string", "minLength": 1 },
+          "surface_id": { "type": "string", "minLength": 1 },
+          "text": { "type": "string", "minLength": 1 }
+        },
+        "additionalProperties": false
+      }
+    },
+    "recording": {
+      "type": "object",
+      "required": ["enabled","recording_ref"],
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "recording_ref": { "type": ["string","null"] }
+      },
+      "additionalProperties": false
+    },
+    "broadcast": {
+      "type": "object",
+      "required": ["status","destinations"],
+      "properties": {
+        "status": { "type": "string", "enum": ["off","ready","live","paused","ended"] },
+        "destinations": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "uniqueItems": true
+        }
+      },
+      "additionalProperties": false
+    },
+    "metadata": { "type": "object", "additionalProperties": true }
+  },
+  "additionalProperties": false
+}
