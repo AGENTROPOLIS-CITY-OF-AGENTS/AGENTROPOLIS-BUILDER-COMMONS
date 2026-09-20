@@ -87,7 +87,7 @@ export function createDomSpatialRenderer({ documentRef = globalThis.document } =
     },
     focusZone(zoneId) {
       if (!root) return false;
-      const node = root.querySelector?.(`[data-zone-id="${CSS?.escape ? CSS.escape(zoneId) : zoneId}"]`);
+      const node = root.querySelector?.(`[data-zone-id="${globalThis.CSS?.escape ? globalThis.CSS.escape(zoneId) : zoneId}"]`);
       if (!node || typeof node.focus !== "function") return false;
       node.focus();
       return true;
