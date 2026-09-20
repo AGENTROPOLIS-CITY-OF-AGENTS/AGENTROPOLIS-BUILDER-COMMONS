@@ -73,3 +73,55 @@ test("2D parity projection preserves navigationally meaningful state", () => {
   assert.equal(twoD.zones[0].label, "Builder Atrium");
   assert.equal("position" in twoD.zones[0], false);
 });
+
+
+test("spatial world rejects unbounded and non-serializable metadata", () => {
+  const huge = { text: "x".repeat(40000) };
+  assert.throws(() => createSpatialWorld({ worldId: "commons", metadata: huge }), /maximum size/);
+  const circular = {}; circular.self = circular;
+  assert.throws(() => createSpatialWorld({ worldId: "commons", metadata: circular }), /JSON-serializable/);
+});
+
+test("spatial labels and marker counts are bounded", () => {
+  assert.throws(() => createSpatialWorld({ worldId: "x".repeat(200) }), /maximum length/);
+  const world = createSpatialWorld({ worldId: "commons" });
+  addSpatialZone(world, { zoneId: "atrium", type: "atrium", label: "Atrium" });
+  for (let i = 0; i < 512; i++) {
+    addPresenceMarker(world, {
+      markerId: `m-${i}`,
+      participantRef: `agent:${i}`,
+      zoneId: "atrium",
+      participantType: "agent",
+      displayName: `Agent ${i}`
+    });
+  }
+  assert.throws(() => addPresenceMarker(world, {
+    markerId: "overflow",
+    participantRef: "agent:overflow",
+    zoneId: "atrium",
+    participantType: "agent",
+    displayName: "Overflow"
+  }), /marker limit exceeded/);
+});
+
+test("project projection does not mutate canonical room or presence inputs", () => {
+  const room = {
+    room_id: "room-demo",
+    project_id: "project-demo",
+    state: "open",
+    participants: ["agent:verity"]
+  };
+  const presences = [{
+    participant_id: "agent:verity",
+    participant_type: "agent",
+    display_name: "VERITY",
+    status: "reviewing"
+  }];
+  const beforeRoom = JSON.stringify(room);
+  const beforePresences = JSON.stringify(presences);
+  const world = projectSpatialWorld({ room, manifest: { name: "Demo" }, presences });
+  world.zones[1].label = "mutated";
+  world.markers[0].display_name = "mutated";
+  assert.equal(JSON.stringify(room), beforeRoom);
+  assert.equal(JSON.stringify(presences), beforePresences);
+});
