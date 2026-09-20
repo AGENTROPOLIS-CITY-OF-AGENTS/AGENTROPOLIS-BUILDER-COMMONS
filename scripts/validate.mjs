@@ -44,6 +44,7 @@ const required = [
   "integrations/hermes/src/adapter.mjs",
   "integrations/webrtc/src/adapter.mjs",
   "integrations/dom-renderer/src/renderer.mjs",
+  "integrations/webxr/src/adapter.mjs",
   "apps/web/index.html",
   "apps/web/app.mjs",
   "apps/web/styles.css"
