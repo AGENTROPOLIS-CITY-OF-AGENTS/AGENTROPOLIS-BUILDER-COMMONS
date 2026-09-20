@@ -36,10 +36,15 @@ export function createGitHubAdapter({
   if (typeof requestJson !== "function") throw new Error("requestJson is required");
 
   let connection = null;
+  let disconnected = false;
 
   const GITHUB_SCOPE = "repo";
 
   async function accessToken() {
+    // Disconnect is terminal for this adapter session: no credential may be
+    // retrieved or transmitted afterwards.
+    if (disconnected) throw new Error("GitHub adapter is disconnected; authorized access is disabled");
+
     // Prefer the credential broker (BYOK): temporary, scoped, revocable, expiring.
     // Verify the credential is GitHub-compatible AND covers the required scope
     // BEFORE retrieving or transmitting any secret.
@@ -95,6 +100,7 @@ export function createGitHubAdapter({
     provider: "github",
 
     async connect() {
+      disconnected = false;
       const account = await authorizedRequest("https://api.github.com/user");
       connection = {
         provider: "github",
@@ -105,6 +111,7 @@ export function createGitHubAdapter({
     },
 
     async disconnect() {
+      disconnected = true;
       connection = null;
       return { provider: "github", connected: false };
     },

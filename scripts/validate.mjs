@@ -25,6 +25,7 @@ const required = [
   "packages/events/src/event-log.mjs",
   "packages/realtime/src/session.mjs",
   "packages/media-adapter/src/contract.mjs",
+  "packages/contribution/src/verification-registry.mjs",
   "integrations/cbe/src/bridge.mjs",
   "integrations/hermes/src/adapter.mjs",
   "apps/web/index.html",

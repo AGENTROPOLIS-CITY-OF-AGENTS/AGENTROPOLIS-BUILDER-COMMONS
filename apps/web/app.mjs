@@ -15,6 +15,7 @@ import { createPresence } from "../../packages/presence/src/presence.mjs";
 import { PresenceRegistry, canPresenceExecute } from "../../packages/presence/src/registry.mjs";
 import { issueCapabilityGrant, can, revoke } from "../../packages/capability-broker/src/grant.mjs";
 import { createContributionEvidence, verifyContribution } from "../../packages/contribution/src/evidence.mjs";
+import { VerificationRegistry } from "../../packages/contribution/src/verification-registry.mjs";
 import { assertRepositoryAdapter, normalizeRepositoryRef } from "../../packages/repository-adapter/src/contract.mjs";
 import { createGitHubAdapter } from "../../integrations/github/src/adapter.mjs";
 import { CredentialBroker } from "../../packages/credential-broker/src/broker.mjs";
@@ -102,6 +103,7 @@ const state = {
   registry: new PresenceRegistry({ offlineAfterMs: 30_000 }),
   eventLog: new EventLog(),
   credentialBroker: new CredentialBroker(),
+  verificationRegistry: new VerificationRegistry(),
   cbeBridge: null,
   hermesAdapter: null,
   room: null,
@@ -285,6 +287,7 @@ function spawnDemoCorridor() {
   // activity accumulates across clicks. The event log is append-only, so we
   // replace it with a fresh instance rather than mutating it.
   state.eventLog = new EventLog();
+  state.verificationRegistry = new VerificationRegistry();
   state.cbeBridge = null;
   state.hermesAdapter = null;
   state.room = null;
@@ -306,7 +309,7 @@ function spawnDemoCorridor() {
   assertRepositoryAdapter(adapter);
 
   // Phase 2: CBE bridge + Hermes adapter + event log
-  state.cbeBridge = createCbeBridge({ eventLog: state.eventLog });
+  state.cbeBridge = createCbeBridge({ eventLog: state.eventLog, verificationRegistry: state.verificationRegistry });
   state.hermesAdapter = createHermesAdapter({ registry: state.registry, eventLog: state.eventLog });
 
   // 2. Build the manifest + spawn the room
@@ -369,6 +372,14 @@ function spawnDemoCorridor() {
     evidence: [{ kind: "pull-request", ref: "github:AGENTROPOLIS-CITY-OF-AGENTS/demo#42", hash: null }]
   });
   verifyContribution(state.contribution, { verifierRef: "human:neuro", receiptRef: "receipt:verify-1" });
+  state.verificationRegistry.register({
+    evidenceId: state.contribution.evidence_id,
+    projectId: state.contribution.project_id,
+    contributorRef: state.contribution.contributor_ref,
+    receiptRef: "receipt:verify-1",
+    verifierRef: "human:neuro",
+    verifiedAt: new Date().toISOString()
+  });
 
   addRoomReference(state.room, "contribution_evidence_refs", state.contribution.evidence_id);
   addRoomReference(state.room, "receipt_refs", "receipt:verify-1");
