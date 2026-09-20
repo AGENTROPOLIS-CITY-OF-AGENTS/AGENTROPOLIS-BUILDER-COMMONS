@@ -22,8 +22,9 @@
       <button class="nav-btn" data-surface="room">PROJECT ROOM</button>
       <button class="nav-btn" data-surface="dock">AGENT DOCK</button>
       <button class="nav-btn" data-surface="integrations">INTEGRATIONS</button>
+      <button class="nav-btn" data-surface="spatial">SPATIAL</button>
     </nav>
-    <span class="status"><i></i> BUILDER COMMONS · v0.1</span>
+    <span class="status"><i></i> BUILDER COMMONS · v0.5</span>
   </header>
 
   <main>
@@ -149,6 +150,35 @@
           <h2>NO AGENTS DOCKED</h2>
           <p class="muted">Connect a governed agent runtime to see its mandate, permissions, and heartbeat here.</p>
         </article>
+      </div>
+    </section>
+
+    <!-- ============ SPATIAL / 2D PARITY ============ -->
+    <section class="surface" data-surface-panel="spatial" aria-label="Spatial Builder Commons">
+      <div class="room-head">
+        <div>
+          <p class="eyebrow">PHASE 5 · SPATIAL INTERFACE</p>
+          <h2>BUILDER ATRIUM MAP</h2>
+          <p class="sublead">The spatial world is a projection of canonical Builder Commons state. 2D remains fully functional.</p>
+        </div>
+        <span class="room-state">FOUNDATION</span>
+      </div>
+
+      <div class="spatial-layout">
+        <article class="panel spatial-stage" aria-label="Builder Commons spatial projection">
+          <div class="spatial-grid" aria-hidden="true"></div>
+          <div data-role="spatial-world" class="spatial-world">
+            <p class="empty">No spatial projection yet. Spawn a project room to populate the Commons.</p>
+          </div>
+        </article>
+
+        <aside class="panel spatial-parity">
+          <h2>ACCESSIBLE 2D PARITY</h2>
+          <p class="muted">Every meaningful spatial object is also listed here as ordinary navigable state.</p>
+          <div data-role="spatial-2d">
+            <p class="empty">No zones available.</p>
+          </div>
+        </aside>
       </div>
     </section>
 
