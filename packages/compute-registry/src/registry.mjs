@@ -2,7 +2,7 @@ import { can } from "../../capability-broker/src/grant.mjs";
 
 const PROVIDER_TYPES = new Set(["local", "community", "cloud", "edge"]);
 const STATUSES = new Set(["offline", "available", "reserved", "busy", "draining"]);
-const SECRET_KEY = /(secret|token|password|private[_-]?key|credential)/i;
+const SECRET_KEY = /(api[_-]?key|access[_-]?token|secret|token|password|passwd|private[_-]?key|credential|wallet)/i;
 
 function clone(value) {
   return JSON.parse(JSON.stringify(value));
@@ -68,6 +68,13 @@ export class ComputeRegistry {
       throw new Error("metadata must be an object");
     }
     assertNoSecretFields(metadata);
+    if (cost !== null) {
+      if (typeof cost !== "object" || Array.isArray(cost)) throw new Error("cost must be an object");
+      if (cost.hourly_micros !== undefined && (!Number.isSafeInteger(cost.hourly_micros) || cost.hourly_micros < 0)) {
+        throw new Error("cost.hourly_micros must be a non-negative integer (no floats for money)");
+      }
+    }
+    if (costPolicyRef !== null && typeof costPolicyRef !== "string") throw new Error("costPolicyRef must be a string or null");
 
     const resource = {
       schema_version: "0.1",

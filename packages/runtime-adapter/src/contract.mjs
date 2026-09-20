@@ -14,7 +14,8 @@ export async function executeGovernedRuntime({
   grant,
   subjectRef,
   resourceRef,
-  execution
+  execution,
+  requireMandate = false
 }) {
   assertRuntimeAdapter(adapter);
   if (
@@ -24,6 +25,10 @@ export async function executeGovernedRuntime({
     !can(grant, "runtime:execute")
   ) {
     throw new Error("runtime execution denied by capability policy");
+  }
+  // Fail closed when policy requires a mandate and the grant carries none.
+  if (requireMandate === true && !grant.mandate_ref) {
+    throw new Error("runtime execution denied: mandate required by policy");
   }
   return adapter.execute({ execution, subjectRef, resourceRef });
 }

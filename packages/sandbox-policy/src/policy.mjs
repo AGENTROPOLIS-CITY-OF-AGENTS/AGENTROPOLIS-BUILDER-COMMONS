@@ -1,8 +1,31 @@
+import { posix as posixPath } from "node:path";
+
 function normalizeDomains(domains = []) {
   if (!Array.isArray(domains) || domains.some((d) => typeof d !== "string" || d.length === 0)) {
     throw new Error("network allowlist must contain non-empty strings");
   }
   return [...new Set(domains.map((d) => d.toLowerCase()))];
+}
+
+// True when `candidate` resolves strictly inside (or equal to) `root`, using
+// POSIX path normalization. This defeats BOTH:
+//   - prefix confusion: "/workspace/output-good" is NOT inside "/workspace/output"
+//   - traversal: "/workspace/output/../secrets" resolves outside -> denied
+function isWithinRoot(root, candidate) {
+  const normRoot = posixPath.normalize(root);
+  const normCandidate = posixPath.normalize(candidate);
+  const rel = posixPath.relative(normRoot, normCandidate);
+  return rel === "" || (!rel.startsWith("..") && !posixPath.isAbsolute(rel));
+}
+
+// A writable root must itself be an absolute, normalized path with no
+// traversal segments or trailing dots.
+function assertWritableRoot(root) {
+  if (typeof root !== "string" || root.length === 0) throw new Error("writableRoot must be a non-empty string");
+  const norm = posixPath.normalize(root);
+  if (!posixPath.isAbsolute(norm)) throw new Error("writableRoot must be an absolute POSIX path");
+  if ((norm.split("/").includes("..")) || norm.endsWith("/..")) throw new Error("writableRoot must not contain traversal segments");
+  return norm;
 }
 
 export function createSandboxPolicy({
@@ -22,7 +45,7 @@ export function createSandboxPolicy({
 
   return {
     filesystem,
-    writable_roots: [...new Set(writableRoots)],
+    writable_roots: [...new Set(writableRoots.map(assertWritableRoot))],
     network,
     allowed_domains: normalizeDomains(allowedDomains),
     process_spawn: Boolean(processSpawn),
@@ -46,14 +69,14 @@ export function authorizeSandboxRequest(policy, request = {}) {
     if (policy.filesystem !== "scoped-write") {
       return { allowed: false, reason: "filesystem writes denied" };
     }
-    const permitted = policy.writable_roots.some(
-      (root) => request.write_path === root || request.write_path.startsWith(root.endsWith("/") ? root : root + "/")
-    );
+    const permitted = policy.writable_roots.some((root) => isWithinRoot(root, request.write_path));
     if (!permitted) return { allowed: false, reason: "write path outside approved roots" };
   }
 
   if (request.network_domain) {
     if (policy.network !== "allowlist") return { allowed: false, reason: "network denied" };
+    // Exact-match only: prevents suffix tricks such as "example.com" being
+    // satisfied by attacker-controlled "evil-example.com".
     if (!policy.allowed_domains.includes(String(request.network_domain).toLowerCase())) {
       return { allowed: false, reason: "network domain not allowlisted" };
     }

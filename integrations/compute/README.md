@@ -30,3 +30,13 @@ The Phase 4 foundation now includes:
 **Resource visibility is not execution authority.**
 
 A resource can appear in the Compute Dock without any agent being allowed to reserve or execute on it. Execution authority must arrive through an explicit scoped capability grant.
+
+## Execution receipts
+
+Every actual execution emits a governed receipt (`packages/execution-receipt`)
+keyed by `exec-<executionId>`, carrying the subject, mandate, resource,
+sandbox, capability-grant, model/runtime refs, start/completion timestamps,
+integer cost, quota consumption, artifact/evidence refs, and failure class.
+Receipts FAIL CLOSED: no receipt is emitted for a successful execution unless a
+real executor supplied evidence refs, and cost is always a non-negative
+integer (never a float).

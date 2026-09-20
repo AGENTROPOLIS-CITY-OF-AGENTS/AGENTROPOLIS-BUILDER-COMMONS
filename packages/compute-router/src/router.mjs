@@ -1,5 +1,9 @@
+// Money is always integer micro-units. A float, negative, or non-finite cost
+// fails closed (treated as unbounded/unelected) rather than participating in
+// routing comparisons, so no float monetary value is ever used.
 function costMicros(resource) {
-  return Number.isFinite(resource.cost?.hourly_micros) ? resource.cost.hourly_micros : Number.POSITIVE_INFINITY;
+  const m = resource.cost?.hourly_micros;
+  return Number.isSafeInteger(m) && m >= 0 ? m : Number.POSITIVE_INFINITY;
 }
 
 function subscriptionUsable(resource) {
