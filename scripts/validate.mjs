@@ -24,9 +24,11 @@ const required = [
   "packages/credential-broker/src/broker.mjs",
   "packages/events/src/event-log.mjs",
   "packages/realtime/src/session.mjs",
+  "packages/realtime/src/handoff.mjs",
   "packages/media-adapter/src/contract.mjs",
   "integrations/cbe/src/bridge.mjs",
   "integrations/hermes/src/adapter.mjs",
+  "integrations/webrtc/src/adapter.mjs",
   "apps/web/index.html",
   "apps/web/app.mjs",
   "apps/web/styles.css"
