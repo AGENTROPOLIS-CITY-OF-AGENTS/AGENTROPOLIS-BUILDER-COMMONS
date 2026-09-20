@@ -217,7 +217,9 @@ packages/
   repository-adapter/src/contract.mjs Provider-portable repository contract
   credential-broker/src/broker.mjs    BYOK credential broker (temporary, scoped,
                                       revocable, expiring, auditable)
-  events/src/event-log.mjs            Append-only room event log (realtime prep)
+  events/src/event-log.mjs            Append-only room event log
+  realtime/src/session.mjs            Provider-neutral realtime collaboration session
+  media-adapter/src/contract.mjs      Media transport adapter contract
   design-system/tokens.css           AGENTROPOLIS design tokens
 
 integrations/
@@ -250,3 +252,27 @@ It is not a single mutable blob:
 
 Presence is descriptive. It never grants authority. See
 `docs/ADAPTER-BOUNDARIES.md` and `docs/LOCAL-DEVELOPMENT.md`.
+
+
+## 10. Realtime collaboration boundary
+
+Phase 3 separates collaboration state from transport.
+
+The realtime session core owns:
+- participant membership
+- explicit approved-surface state
+- normalized pointer and annotation primitives
+- recording metadata
+- broadcast status metadata
+
+The media adapter owns transport operations:
+- connect session
+- publish an already-approved surface
+- unpublish a surface
+- disconnect session
+
+WebRTC, OBS, and external streaming providers are adapters behind this boundary. They are not Builder Commons foundations.
+
+### Safety invariant
+
+Nothing is shared by default. A surface becomes shareable only after explicit approval, and interaction with that surface requires an active participant in the session. Secrets, hidden windows, raw agent memory, and credential state remain outside the realtime session model.
