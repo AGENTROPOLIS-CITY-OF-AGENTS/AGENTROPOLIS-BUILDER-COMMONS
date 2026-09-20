@@ -32,6 +32,7 @@ const required = [
   "packages/runtime-adapter/src/contract.mjs",
   "packages/sandbox-policy/src/policy.mjs",
   "packages/quota-policy/src/policy.mjs",
+  "packages/execution-receipt/src/receipt.mjs",
   "integrations/cbe/src/bridge.mjs",
   "integrations/hermes/src/adapter.mjs",
   "integrations/webrtc/src/adapter.mjs",

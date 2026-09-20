@@ -313,8 +313,19 @@ Receipt / Audit
 
 ### Routing invariant
 
-ATG may carry intent and requirements. ATG does not select compute providers. Compute routing stays in the compute infrastructure layer.
+**ATG expresses compute requirements. Compute infrastructure selects resources.**
+
+ATG may carry intent, resource requirements, constraints, and execution
+instructions. ATG does not select compute providers, model providers,
+economic rails, or cloud accounts. Compute infrastructure owns compute
+routing; PAYRAIL owns settlement routing.
 
 ### Safety invariant
 
-A resource being visible, connected, or present in the Compute Dock never grants execution authority.
+**RESOURCE VISIBLE != AUTHORIZED TO EXECUTE.**
+
+A resource being visible, connected, or present in the Compute Dock never
+grants execution authority. Registration, presence, and display are
+descriptive only. Execution authority arrives exclusively through an explicit,
+scoped, expiring capability grant (compute:reserve / compute:release /
+compute:execute, model:invoke, runtime:execute) checked by the governed gate.

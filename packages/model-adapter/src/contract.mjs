@@ -14,7 +14,8 @@ export async function invokeGovernedModel({
   grant,
   subjectRef,
   resourceRef,
-  request
+  request,
+  requireMandate = false
 }) {
   assertModelAdapter(adapter);
   if (
@@ -24,6 +25,9 @@ export async function invokeGovernedModel({
     !can(grant, "model:invoke")
   ) {
     throw new Error("model invocation denied by capability policy");
+  }
+  if (requireMandate === true && !grant.mandate_ref) {
+    throw new Error("model invocation denied: mandate required by policy");
   }
   return adapter.invoke({ request, subjectRef, resourceRef });
 }
