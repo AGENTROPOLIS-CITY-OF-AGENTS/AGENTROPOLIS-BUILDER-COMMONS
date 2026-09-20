@@ -296,7 +296,7 @@ function renderSpatial() {
   worldHost.innerHTML = state.spatialWorld.zones.map((zone, index) => {
     const markers = state.spatialWorld.markers.filter((m) => m.zone_id === zone.zone_id);
     return `
-      <article class="spatial-zone spatial-zone-${zone.type}" data-zone-id="${zone.zone_id}" style="--zone-index:${index}">
+      <article class="spatial-zone spatial-zone-${zone.type}" data-zone-id="${escapeHtml(zone.zone_id)}" style="--zone-index:${index}">
         <div class="spatial-zone-head">
           <strong>${escapeHtml(zone.label)}</strong>
           <span class="tag">${escapeHtml(zone.type)}</span>
