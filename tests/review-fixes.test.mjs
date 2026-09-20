@@ -5,6 +5,7 @@ import os from "node:os";
 import path from "node:path";
 import { CredentialBroker } from "../packages/credential-broker/src/broker.mjs";
 import { createCbeBridge } from "../integrations/cbe/src/bridge.mjs";
+import { VerificationRegistry } from "../packages/contribution/src/verification-registry.mjs";
 import { createHermesAdapter } from "../integrations/hermes/src/adapter.mjs";
 import { createGitHubAdapter } from "../integrations/github/src/adapter.mjs";
 import { PresenceRegistry } from "../packages/presence/src/registry.mjs";
@@ -50,7 +51,10 @@ test("P1-1 GitHub adapter denies when broker credential lacks the required scope
 // ---------------------------------------------------------------------------
 
 test("P1-2 CBE bridge rejects unverified contribution evidence", () => {
-  const bridge = createCbeBridge();
+  // Trusted registry has no record => unresolved (fail closed), regardless of
+  // the caller's claimed verification.
+  const vreg = new VerificationRegistry();
+  const bridge = createCbeBridge({ verificationRegistry: vreg });
   const contribution = createContributionEvidence({
     evidenceId: "evidence-unverified",
     projectId: "project-1",
@@ -58,17 +62,25 @@ test("P1-2 CBE bridge rejects unverified contribution evidence", () => {
     contributionType: "code",
     evidence: [{ kind: "pull-request", ref: "github:owner/repo#1", hash: null }]
   });
-  // Not verified -> must throw (fail closed).
-  assert.throws(() => bridge.emitContribution({ contribution }), /VERIFIED state/);
+  assert.throws(() => bridge.emitContribution({ contribution }), /VERIFICATION_UNRESOLVED/);
   // Manually claiming "verified" in the caller's argument does NOT unlock it.
   assert.throws(() => bridge.emitContribution({
     contribution,
     verification: { status: "verified", verifier_ref: "human:neuro", verified_at: "2026-09-19T00:00:00Z", receipt_ref: "receipt:x" }
-  }), /VERIFIED state/, "caller-supplied verification must not override recorded evidence state");
+  }), /VERIFICATION_UNRESOLVED/, "caller-supplied verification must not override the trusted boundary");
 });
 
-test("P1-2 CBE bridge emits only evidence with a recorded verified state", () => {
-  const bridge = createCbeBridge();
+test("P1-2 CBE bridge emits only evidence registered in the trusted boundary", () => {
+  const vreg = new VerificationRegistry();
+  vreg.register({
+    evidenceId: "evidence-verified",
+    projectId: "project-1",
+    contributorRef: "agent:verity",
+    receiptRef: "receipt:v",
+    verifierRef: "human:neuro",
+    verifiedAt: new Date().toISOString()
+  });
+  const bridge = createCbeBridge({ verificationRegistry: vreg });
   const contribution = createContributionEvidence({
     evidenceId: "evidence-verified",
     projectId: "project-1",
