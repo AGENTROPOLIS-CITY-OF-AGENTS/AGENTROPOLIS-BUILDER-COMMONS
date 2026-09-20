@@ -12,11 +12,56 @@ function encodeLocator(locator) {
   return locator.split("/").map(encodeURIComponent).join("/");
 }
 
-export function createGitHubAdapter({ credentialProvider, requestJson }) {
-  if (!credentialProvider) throw new Error("credentialProvider is required");
+// Default live HTTP client. Uses global fetch when available.
+async function defaultRequestJson(url, options = {}) {
+  if (typeof fetch !== "function") {
+    throw new Error("no fetch implementation available; provide requestJson");
+  }
+  const response = await fetch(url, options);
+  if (!response.ok) {
+    throw new Error(`GitHub API request failed: ${response.status} ${response.statusText}`);
+  }
+  return response.json();
+}
+
+export function createGitHubAdapter({
+  credentialProvider,
+  credentialBroker = null,
+  credentialId = null,
+  requestJson = defaultRequestJson
+}) {
+  if (!credentialProvider && !(credentialBroker && credentialId)) {
+    throw new Error("credentialProvider or (credentialBroker + credentialId) is required");
+  }
   if (typeof requestJson !== "function") throw new Error("requestJson is required");
 
+  let connection = null;
+  let disconnected = false;
+
+  const GITHUB_SCOPE = "repo";
+
   async function accessToken() {
+    // Disconnect is terminal for this adapter session: no credential may be
+    // retrieved or transmitted afterwards.
+    if (disconnected) throw new Error("GitHub adapter is disconnected; authorized access is disabled");
+
+    // Prefer the credential broker (BYOK): temporary, scoped, revocable, expiring.
+    // Verify the credential is GitHub-compatible AND covers the required scope
+    // BEFORE retrieving or transmitting any secret.
+    if (credentialBroker && credentialId) {
+      const broker = credentialBroker;
+      const described = broker.describe ? broker.describe(credentialId) : null;
+      if (!described) throw new Error("GitHub credential not found");
+      if (described.provider !== "github") {
+        throw new Error("GitHub credential provider mismatch: expected github, got " + described.provider);
+      }
+      if (described.revoked_at) throw new Error("GitHub credential is revoked");
+      const token = broker.getIfCompatible
+        ? broker.getIfCompatible(credentialId, { provider: "github", requiredScope: GITHUB_SCOPE })
+        : (described.scope === GITHUB_SCOPE ? broker.get(credentialId) : null);
+      if (!token) throw new Error("GitHub credential is not active or does not cover required scope");
+      return token;
+    }
     const token = typeof credentialProvider === "function"
       ? await credentialProvider()
       : await credentialProvider.getAccessToken?.();
@@ -36,6 +81,10 @@ export function createGitHubAdapter({ credentialProvider, requestJson }) {
     });
   }
 
+  function deepClone(value) {
+    return JSON.parse(JSON.stringify(value));
+  }
+
   function normalizeRepo(repo) {
     return {
       provider: "github",
@@ -51,15 +100,26 @@ export function createGitHubAdapter({ credentialProvider, requestJson }) {
     provider: "github",
 
     async connect() {
+      disconnected = false;
       const account = await authorizedRequest("https://api.github.com/user");
-      return {
+      connection = {
         provider: "github",
         connected: true,
-        account: {
-          login: account.login,
-          id: account.id
-        }
+        account: { login: account.login, id: account.id }
       };
+      return deepClone(connection);
+    },
+
+    async disconnect() {
+      disconnected = true;
+      connection = null;
+      return { provider: "github", connected: false };
+    },
+
+    connectionState() {
+      return connection
+        ? deepClone(connection)
+        : { provider: "github", connected: false };
     },
 
     async listRepositories({ maxPages = 100 } = {}) {

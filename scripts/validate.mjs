@@ -20,6 +20,11 @@ const required = [
   "spec/opportunity-reference.schema.json",
   "spec/receipt-reference.schema.json",
   "packages/design-system/tokens.css",
+  "packages/credential-broker/src/broker.mjs",
+  "packages/events/src/event-log.mjs",
+    "packages/contribution/src/verification-registry.mjs",
+    "integrations/cbe/src/bridge.mjs",
+  "integrations/hermes/src/adapter.mjs",
   "apps/web/index.html",
   "apps/web/app.mjs",
   "apps/web/styles.css"

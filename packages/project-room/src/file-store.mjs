@@ -10,6 +10,16 @@ function clone(value) {
   return JSON.parse(JSON.stringify(value));
 }
 
+// Backfills fields introduced after a room was persisted (e.g. opportunity_refs
+// added in Phase 2). Allows older rooms to load without missing-array errors and
+// normalizes them to the current room shape.
+function normalizeRoom(room) {
+  if (!room || typeof room !== "object") return room;
+  const normalized = clone(room);
+  if (!Array.isArray(normalized.opportunity_refs)) normalized.opportunity_refs = [];
+  return normalized;
+}
+
 function assertRoomId(roomId) {
   if (
     typeof roomId !== "string" ||
@@ -112,12 +122,12 @@ export class FileProjectRoomStore {
       return null;
     }
 
-    return clone(state.rooms[roomId]);
+    return normalizeRoom(state.rooms[roomId]);
   }
 
   async list() {
     const state = await this.#read();
-    return Object.values(state.rooms).map(clone);
+    return Object.values(state.rooms).map(normalizeRoom);
   }
 
   async delete(roomId) {

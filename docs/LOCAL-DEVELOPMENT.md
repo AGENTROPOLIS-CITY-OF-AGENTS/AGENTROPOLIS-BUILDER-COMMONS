@@ -69,8 +69,11 @@ The Builder Commons shell loads with four surfaces:
    the agent is allowed only because of its explicit grant — presence alone
    grants nothing.
 6. The **Integrations** surface shows honest adapter status. GitHub is MOCK
-   (real adapter, no live credential broker wired). Hermes is AVAILABLE. The
-   rest are PLANNED.
+   (real adapter, no live credential broker wired). Hermes and CBE are
+   AVAILABLE (adapters implemented). The rest are PLANNED.
+7. The **Project Room** activity feed now renders from the event log, and the
+   **Builder Atrium** opportunity preview shows the CBE opportunity attached
+   through the CBE bridge.
 
 ## Tests
 
@@ -92,6 +95,8 @@ Runs `node --test tests/*.test.mjs`. The suite covers:
   authority separation; malformed grants fail closed)
 - **UI shell** (four surfaces present, honest integration status, demo corridor
   wiring, presence-never-grants-authority, render smoke tests)
+- **Phase 2** (credential broker BYOK, event log, CBE bridge, Hermes adapter,
+  live GitHub connectivity + connection state)
 
 ## Validation
 

@@ -15,8 +15,13 @@ import { createPresence } from "../../packages/presence/src/presence.mjs";
 import { PresenceRegistry, canPresenceExecute } from "../../packages/presence/src/registry.mjs";
 import { issueCapabilityGrant, can, revoke } from "../../packages/capability-broker/src/grant.mjs";
 import { createContributionEvidence, verifyContribution } from "../../packages/contribution/src/evidence.mjs";
+import { VerificationRegistry } from "../../packages/contribution/src/verification-registry.mjs";
 import { assertRepositoryAdapter, normalizeRepositoryRef } from "../../packages/repository-adapter/src/contract.mjs";
 import { createGitHubAdapter } from "../../integrations/github/src/adapter.mjs";
+import { CredentialBroker } from "../../packages/credential-broker/src/broker.mjs";
+import { EventLog } from "../../packages/events/src/event-log.mjs";
+import { createCbeBridge } from "../../integrations/cbe/src/bridge.mjs";
+import { createHermesAdapter } from "../../integrations/hermes/src/adapter.mjs";
 
 const $ = (sel) => document.querySelector(sel);
 const $$ = (sel) => [...document.querySelectorAll(sel)];
@@ -58,21 +63,21 @@ const INTEGRATIONS = [
     capabilities: []
   },
   {
-    id: "hermes",
-    name: "Hermes",
-    provider: "hermes",
-    status: "available",
-    desc: "First-class runtime/community integration. Hermes is an adapter, not the foundation of Builder Commons.",
-    capabilities: ["agent-presence", "runtime-adapter"]
-  },
-  {
-    id: "cbe",
-    name: "CHAOS Builders Exchange",
-    provider: "cbe",
-    status: "planned",
-    desc: "CBE owns opportunities, matching, reputation, contracts. Builder Commons emits verified contribution evidence.",
-    capabilities: ["opportunity-reference", "contribution-evidence"]
-  },
+      id: "hermes",
+      name: "Hermes",
+      provider: "hermes",
+      status: "available",
+      desc: "First-class runtime/community integration. Hermes adapter maps agents into the presence contract. Not the foundation of Builder Commons.",
+      capabilities: ["agent-presence", "runtime-adapter", "presence-mapping"]
+    },
+    {
+      id: "cbe",
+      name: "CHAOS Builders Exchange",
+      provider: "cbe",
+      status: "available",
+      desc: "CBE owns opportunities, matching, reputation, contracts. The CBE bridge accepts opportunity references and emits verified contribution evidence.",
+      capabilities: ["opportunity-reference", "contribution-evidence", "bridge"]
+    },
   {
     id: "compute",
     name: "Compute",
@@ -96,10 +101,16 @@ const INTEGRATIONS = [
 // ---------------------------------------------------------------------------
 const state = {
   registry: new PresenceRegistry({ offlineAfterMs: 30_000 }),
+  eventLog: new EventLog(),
+  credentialBroker: new CredentialBroker(),
+  verificationRegistry: new VerificationRegistry(),
+  cbeBridge: null,
+  hermesAdapter: null,
   room: null,
   manifest: null,
   grant: null,
   contribution: null,
+  opportunity: null,
   heartbeatTimer: null
 };
 
@@ -165,8 +176,9 @@ function renderRoom() {
     ? participants.join("")
     : `<li class="empty">No participants.</li>`;
 
-  $("[data-role='activity-feed']").innerHTML = room.tasks.length
-    ? room.tasks.map((t) => `<li>${t}</li>`).join("")
+  const events = state.eventLog.list({ roomRef: room.room_id, limit: 8 });
+  $("[data-role='activity-feed']").innerHTML = events.length
+    ? events.map((e) => `<li>${e.type}<span class="when">${new Date(e.occurred_at).toLocaleTimeString()}</span></li>`).join("")
     : `<li class="empty">No activity yet.</li>`;
 
   $("[data-role='evidence-feed']").innerHTML = room.contribution_evidence_refs.length
@@ -244,7 +256,17 @@ function renderRecentProjects() {
 
 function renderOpportunityPreview() {
   const host = $("[data-role='opportunity-preview']");
-  host.innerHTML = `<li class="empty">No opportunities linked from CBE. The CBE bridge is a planned adapter.</li>`;
+  if (!state.opportunity) {
+    host.innerHTML = `<li class="empty">No opportunities linked from CBE. Spawn a room to attach an opportunity.</li>`;
+    return;
+  }
+  host.innerHTML = `
+    <li>
+      <span class="dot available"></span>
+      <span>${state.opportunity.summary}</span>
+      <span class="tag">${state.opportunity.source}</span>
+      <span class="muted">${state.opportunity.status}</span>
+    </li>`;
 }
 
 function renderAll() {
@@ -261,6 +283,19 @@ function renderAll() {
 // Corridor actions
 // ---------------------------------------------------------------------------
 function spawnDemoCorridor() {
+  // P2-7: on respawn, reset the event log + demo room so no stale duplicate
+  // activity accumulates across clicks. The event log is append-only, so we
+  // replace it with a fresh instance rather than mutating it.
+  state.eventLog = new EventLog();
+  state.verificationRegistry = new VerificationRegistry();
+  state.cbeBridge = null;
+  state.hermesAdapter = null;
+  state.room = null;
+  state.manifest = null;
+  state.grant = null;
+  state.contribution = null;
+  state.opportunity = null;
+
   // 1. Import a repository through the GitHub adapter (MOCK credential provider)
   const mockCredentialProvider = async () => "gho_mock_demo_token_never_persisted";
   const requestJson = async (url) => {
@@ -272,6 +307,10 @@ function spawnDemoCorridor() {
   };
   const adapter = createGitHubAdapter({ credentialProvider: mockCredentialProvider, requestJson });
   assertRepositoryAdapter(adapter);
+
+  // Phase 2: CBE bridge + Hermes adapter + event log
+  state.cbeBridge = createCbeBridge({ eventLog: state.eventLog, verificationRegistry: state.verificationRegistry });
+  state.hermesAdapter = createHermesAdapter({ registry: state.registry, eventLog: state.eventLog });
 
   // 2. Build the manifest + spawn the room
   state.manifest = createProjectManifest({
@@ -299,14 +338,12 @@ function spawnDemoCorridor() {
     displayName: "NEURO",
     status: "available"
   }));
-  state.registry.upsert(createPresence({
-    participantId: "agent:verity",
-    participantType: "agent",
+  state.hermesAdapter.registerAgent({
+    agentId: "verity",
     displayName: "VERITY",
-    runtime: "hermes",
-    status: "working",
+    runtimeStatus: "running",
     declaredCapabilities: ["github:pr:create", "code:review"]
-  }));
+  });
 
   // 5. Issue a scoped, expiring capability grant (authority is explicit, not inferred)
   state.grant = issueCapabilityGrant({
@@ -318,7 +355,11 @@ function spawnDemoCorridor() {
     expiresAt: new Date(Date.now() + 60 * 60 * 1000).toISOString()
   });
 
-  // 6. Record activity + create contribution evidence
+  // 6. Record activity (event log) + create contribution evidence
+  state.eventLog.append({ type: "room.created", roomRef: state.room.room_id, actorRef: "human:neuro", payload: { room_id: state.room.room_id } });
+  state.eventLog.append({ type: "repository.connected", roomRef: state.room.room_id, actorRef: "human:neuro", payload: { locator: "AGENTROPOLIS-CITY-OF-AGENTS/demo" } });
+  state.eventLog.append({ type: "participant.joined", roomRef: state.room.room_id, actorRef: "human:neuro", payload: { participant_id: "human:neuro" } });
+  state.eventLog.append({ type: "participant.joined", roomRef: state.room.room_id, actorRef: "agent:verity", payload: { participant_id: "agent:verity" } });
   state.room.tasks.push("Imported repository AGENTROPOLIS-CITY-OF-AGENTS/demo");
   state.room.tasks.push("Spawned persistent project room room-demo");
 
@@ -331,9 +372,28 @@ function spawnDemoCorridor() {
     evidence: [{ kind: "pull-request", ref: "github:AGENTROPOLIS-CITY-OF-AGENTS/demo#42", hash: null }]
   });
   verifyContribution(state.contribution, { verifierRef: "human:neuro", receiptRef: "receipt:verify-1" });
+  state.verificationRegistry.register({
+    evidenceId: state.contribution.evidence_id,
+    projectId: state.contribution.project_id,
+    contributorRef: state.contribution.contributor_ref,
+    receiptRef: "receipt:verify-1",
+    verifierRef: "human:neuro",
+    verifiedAt: new Date().toISOString()
+  });
 
   addRoomReference(state.room, "contribution_evidence_refs", state.contribution.evidence_id);
   addRoomReference(state.room, "receipt_refs", "receipt:verify-1");
+
+  // Phase 2: attach a CBE opportunity and emit verified evidence to CBE
+  state.opportunity = {
+    schema_version: "0.1",
+    opportunity_id: "opp-1",
+    source: "cbe",
+    summary: "Build the integrated corridor",
+    status: "open"
+  };
+  state.cbeBridge.attachOpportunity({ room: state.room, opportunity: state.opportunity });
+  state.cbeBridge.emitContribution({ contribution: state.contribution });
 
   // 7. Prove presence does not grant authority: the agent's grant is the ONLY authority
   const canExecute = canPresenceExecute({
