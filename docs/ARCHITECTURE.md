@@ -462,3 +462,23 @@ An XR session or controller/input source can express interaction intent only. An
 Camera, microphone, geolocation, anchors, hit-test, hand tracking, eye tracking, recording, and screenshots are not silently activated by this adapter. Optional features require explicit client requests and platform permission handling.
 
 Unsupported browsers remain fully usable through desktop and accessible 2D modes.
+
+
+## 16. Browser AR / VR client controllers
+
+Browser XR client controllers consume the same renderer-neutral spatial projection contract used by desktop mode.
+
+VR and AR controllers own:
+- explicit enter/exit lifecycle
+- projection presentation
+- zone/entity selection intent
+- action-request intent
+- client-mode state
+
+They do not own execution authority.
+
+Selections, gaze, controller rays, device pose, anchors, or proximity are presentation/input signals only. They may emit governed intents such as `spatial.action.request`, but those intents must pass the normal AGENTROPOLIS identity, mandate, policy, capability, execution, receipt, and audit corridor.
+
+AR anchors and placement are not identity proofs, authority proofs, project truth, room truth, or physical-safety guarantees.
+
+No automatic recording, screenshot capture, microphone activation, or background capture is introduced by the browser client controllers.
