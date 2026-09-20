@@ -20,6 +20,9 @@ export function createRealtimeSession({ sessionId, roomRef, createdBy, metadata 
   requireId(sessionId, "sessionId");
   requireId(roomRef, "roomRef");
   requireId(createdBy, "createdBy");
+  if (metadata === null || typeof metadata !== "object" || Array.isArray(metadata)) {
+    throw new Error("metadata must be a plain object");
+  }
   return {
     schema_version: "0.1",
     session_id: sessionId,
@@ -44,19 +47,31 @@ export function joinRealtimeSession(session, participantRef) {
 
 export function leaveRealtimeSession(session, participantRef) {
   session.participants = session.participants.filter((ref) => ref !== participantRef);
+  // Remove orphaned current pointers for the departed participant.
+  session.pointers = session.pointers.filter((p) => p.participant_ref !== participantRef);
   return clone(session);
 }
 
 export function setRealtimeSessionStatus(session, status) {
   if (!SESSION_STATUSES.has(status)) throw new Error("unsupported session status");
+  if (status === "ended") {
+    if (session.recording?.enabled === true) {
+      throw new Error("cannot end session while recording is active");
+    }
+    if (["ready","live","paused"].includes(session.broadcast?.status)) {
+      throw new Error("cannot end session while broadcast is active");
+    }
+  }
   session.status = status;
   return clone(session);
 }
 
 export function approveSurface(session, { surfaceId, kind, ownerRef, label = null }) {
+  if (session.status === "ended") throw new Error("cannot approve surfaces in an ended session");
   requireId(surfaceId, "surfaceId");
   requireId(ownerRef, "ownerRef");
   if (!SURFACE_KINDS.has(kind)) throw new Error("unsupported surface kind");
+  if (label !== null && typeof label !== "string") throw new Error("surface label must be a string or null");
   if (session.approved_surfaces.some((surface) => surface.surface_id === surfaceId)) {
     throw new Error("surface already approved");
   }
@@ -74,6 +89,9 @@ export function approveSurface(session, { surfaceId, kind, ownerRef, label = nul
 export function revokeSurface(session, surfaceId) {
   const before = session.approved_surfaces.length;
   session.approved_surfaces = session.approved_surfaces.filter((surface) => surface.surface_id !== surfaceId);
+  // Remove pointers referencing the revoked surface so a later re-approval of
+  // the same surface id cannot resurrect stale pointer state.
+  session.pointers = session.pointers.filter((p) => p.surface_id !== surfaceId);
   return before !== session.approved_surfaces.length;
 }
 
@@ -91,7 +109,11 @@ export function addPointer(session, { participantRef, surfaceId, x, y }) {
     throw new Error("pointer coordinates must be normalized");
   }
   const pointer = { participant_ref: participantRef, surface_id: surfaceId, x, y };
-  session.pointers.push(pointer);
+  const index = session.pointers.findIndex(
+    (item) => item.participant_ref === participantRef && item.surface_id === surfaceId
+  );
+  if (index === -1) session.pointers.push(pointer);
+  else session.pointers[index] = pointer;
   return clone(pointer);
 }
 
@@ -111,20 +133,37 @@ export function addAnnotation(session, { participantRef, surfaceId, text }) {
 }
 
 export function setRecording(session, { enabled, recordingRef = null }) {
-  session.recording = {
-    enabled: Boolean(enabled),
-    recording_ref: enabled ? recordingRef : null
-  };
+  if (session.status === "ended") throw new Error("cannot change recording in an ended session");
+  if (typeof enabled !== "boolean") throw new Error("recording enabled must be boolean");
+  if (recordingRef !== null && (typeof recordingRef !== "string" || recordingRef.length === 0)) {
+    throw new Error("recordingRef must be a non-empty string or null");
+  }
+  const previousRef = session.recording?.recording_ref ?? null;
+  // Starting a NEW recording without an assigned reference must NOT inherit the
+  // previous completed recording's reference. Stopping preserves/accepts the
+  // final reference.
+  const nextRef = enabled ? (recordingRef ?? null) : (recordingRef ?? previousRef);
+  session.recording = { enabled, recording_ref: nextRef };
   return clone(session.recording);
 }
 
-export function setBroadcast(session, { status, destinations = [] }) {
+export function setBroadcast(session, { status, destinations }) {
+  if (session.status === "ended") throw new Error("cannot change broadcast in an ended session");
   if (!["off","ready","live","paused","ended"].includes(status)) {
     throw new Error("unsupported broadcast status");
   }
-  if (!Array.isArray(destinations) || destinations.some((d) => typeof d !== "string" || d.length === 0)) {
-    throw new Error("destinations must be strings");
+  // Omitted destinations preserve the prior list (status-only transitions must
+  // not silently erase configured destinations). Explicit destinations are
+  // validated and replace the list.
+  let nextDestinations;
+  if (destinations === undefined) {
+    nextDestinations = session.broadcast?.destinations ?? [];
+  } else {
+    if (!Array.isArray(destinations) || destinations.some((d) => typeof d !== "string" || d.length === 0)) {
+      throw new Error("destinations must be strings");
+    }
+    nextDestinations = [...new Set(destinations)];
   }
-  session.broadcast = { status, destinations: [...new Set(destinations)] };
+  session.broadcast = { status, destinations: nextDestinations };
   return clone(session.broadcast);
 }
