@@ -135,6 +135,9 @@ test("registry rejects api_key, wallet, and nested secret-bearing metadata", () 
   assert.throws(() => registry.register({ resourceId: "r", ownerRef: "x", providerType: "local", metadata: { api_key: "x" } }), /secret-bearing field: api_key/);
   assert.throws(() => registry.register({ resourceId: "r", ownerRef: "x", providerType: "local", metadata: { wallet_key: "x" } }), /secret-bearing field: wallet_key/);
   assert.throws(() => registry.register({ resourceId: "r", ownerRef: "x", providerType: "local", metadata: { nested: { token: "x" } } }), /secret-bearing field: token/);
+  // Shorthand secret-bearing names are also rejected (defense-in-depth).
+  assert.throws(() => registry.register({ resourceId: "r", ownerRef: "x", providerType: "local", metadata: { creds: "x" } }), /secret-bearing field: creds/);
+  assert.throws(() => registry.register({ resourceId: "r", ownerRef: "x", providerType: "local", metadata: { auth: "x" } }), /secret-bearing field: auth/);
 });
 
 // ---------------------------------------------------------------------------
