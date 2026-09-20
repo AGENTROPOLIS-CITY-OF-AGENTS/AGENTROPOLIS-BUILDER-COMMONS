@@ -48,8 +48,8 @@ Goal: a builder can enter, connect source, spawn a project space, invite a parti
 - [x] shared pointer / annotation primitives
 - [x] recording + broadcast session metadata
 - [x] provider-neutral media adapter contract
-- [ ] WebRTC transport adapter
-- [ ] terminal / browser / app surface handoff transport
+- [x] WebRTC transport adapter
+- [x] governed surface handoff coordination
 - [ ] Broadcast Tower live transport
 - [ ] OBS / streaming integration
 
