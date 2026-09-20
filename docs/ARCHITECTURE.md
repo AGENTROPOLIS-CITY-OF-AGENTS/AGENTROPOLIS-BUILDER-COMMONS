@@ -276,3 +276,45 @@ WebRTC, OBS, and external streaming providers are adapters behind this boundary.
 ### Safety invariant
 
 Nothing is shared by default. A surface becomes shareable only after explicit approval, and interaction with that surface requires an active participant in the session. Secrets, hidden windows, raw agent memory, and credential state remain outside the realtime session model.
+
+
+## 11. BYOE compute execution boundary
+
+Phase 4 adds a provider-neutral compute control plane without turning Builder Commons into a cloud vendor.
+
+```text
+Task requirements
+      ↓
+Compute Registry
+      ↓
+Policy + Quota Filter
+      ↓
+Compute Router
+      ↓
+Capability-Gated Reservation
+      ↓
+Sandbox Policy
+      ↓
+Model / Runtime Adapter
+      ↓
+Execution
+      ↓
+Receipt / Audit
+```
+
+### Ownership boundaries
+
+- Compute Registry owns descriptive resource state and reservations.
+- Compute Router selects among eligible resources under policy.
+- Capability grants authorize reservation or execution.
+- Sandbox policy constrains execution surfaces.
+- Model and runtime adapters remain replaceable providers.
+- Builder Commons does not own the underlying hardware, model account, runtime account, or subscription.
+
+### Routing invariant
+
+ATG may carry intent and requirements. ATG does not select compute providers. Compute routing stays in the compute infrastructure layer.
+
+### Safety invariant
+
+A resource being visible, connected, or present in the Compute Dock never grants execution authority.
