@@ -25,8 +25,17 @@ export class CredentialBroker {
     if (typeof secret !== "string" || secret.length === 0) {
       throw new Error("secret must be a non-empty string");
     }
-    if (expiresAt !== null && Number.isNaN(Date.parse(expiresAt))) {
-      throw new Error("expiresAt must be a valid date-time or null");
+
+    // Canonicalize expiration: accept only ISO-8601 date-time strings (or null).
+    // A mutable Date is rejected, and a falsy numeric 0 / invalid timestamp is
+    // rejected so a credential can never be stored without a canonical expiry
+    // check. The stored value is an immutable ISO string.
+    let canonicalExpiresAt = null;
+    if (expiresAt !== null) {
+      if (typeof expiresAt !== "string") throw new Error("expiresAt must be an ISO-8601 date-time string or null");
+      const parsed = Date.parse(expiresAt);
+      if (Number.isNaN(parsed) || parsed <= 0) throw new Error("expiresAt must be a valid future date-time string or null");
+      canonicalExpiresAt = new Date(parsed).toISOString();
     }
 
     const record = {
@@ -35,7 +44,7 @@ export class CredentialBroker {
       scope: scope || null,
       secret,
       issued_at: new Date(this.clock()).toISOString(),
-      expires_at: expiresAt,
+      expires_at: canonicalExpiresAt,
       revoked_at: null,
       receipt_ref: null,
       metadata: clone(metadata)

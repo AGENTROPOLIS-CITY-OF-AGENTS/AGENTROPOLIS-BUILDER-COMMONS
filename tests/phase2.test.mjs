@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { CredentialBroker } from "../packages/credential-broker/src/broker.mjs";
 import { EventLog } from "../packages/events/src/event-log.mjs";
 import { createCbeBridge } from "../integrations/cbe/src/bridge.mjs";
+import { VerificationRegistry } from "../packages/contribution/src/verification-registry.mjs";
 import { createHermesAdapter, mapHermesStatus } from "../integrations/hermes/src/adapter.mjs";
 import { createGitHubAdapter } from "../integrations/github/src/adapter.mjs";
 import { PresenceRegistry } from "../packages/presence/src/registry.mjs";
@@ -59,7 +60,7 @@ test("credential broker never leaks secrets through list()", () => {
 test("credential broker rejects malformed credentials", () => {
   const broker = new CredentialBroker();
   assert.throws(() => broker.store({ credentialId: "c", provider: "github", secret: "" }), /required/);
-  assert.throws(() => broker.store({ credentialId: "c", provider: "github", secret: "x", expiresAt: "not-a-date" }), /valid date-time/);
+  assert.throws(() => broker.store({ credentialId: "c", provider: "github", secret: "x", expiresAt: "not-a-date" }), /date-time/);
 });
 
 // ---------------------------------------------------------------------------
@@ -118,7 +119,16 @@ test("CBE bridge rejects malformed opportunities", () => {
 
 test("CBE bridge emits verified contribution evidence for CBE consumption", () => {
   const log = new EventLog();
-  const bridge = createCbeBridge({ eventLog: log });
+  const vreg = new VerificationRegistry();
+  vreg.register({
+    evidenceId: "evidence-1",
+    projectId: "project-1",
+    contributorRef: "agent:verity",
+    receiptRef: "receipt:verify-1",
+    verifierRef: "human:neuro",
+    verifiedAt: new Date().toISOString()
+  });
+  const bridge = createCbeBridge({ eventLog: log, verificationRegistry: vreg });
   const contribution = createContributionEvidence({
     evidenceId: "evidence-1",
     projectId: "project-1",
@@ -249,7 +259,10 @@ test("CBE bridge rejects malformed opportunity ids before room mutation", () => 
 });
 
 test("CBE bridge rejects fabricated or incomplete verified evidence", () => {
-  const bridge = createCbeBridge();
+  // Trusted registry has NO record for this evidence -> fail closed, even when
+  // the caller supplies a fully populated, structurally complete verification.
+  const vreg = new VerificationRegistry();
+  const bridge = createCbeBridge({ verificationRegistry: vreg });
   const contribution = createContributionEvidence({
     evidenceId: "evidence-fake",
     projectId: "project-1",
@@ -259,13 +272,13 @@ test("CBE bridge rejects fabricated or incomplete verified evidence", () => {
   });
 
   contribution.verification = { status: "verified" };
-  assert.throws(() => bridge.emitContribution({ contribution }), /complete recorded VERIFIED evidence/);
+  assert.throws(() => bridge.emitContribution({ contribution }), /VERIFICATION_UNRESOLVED/);
 
   contribution.verification = {
     status: "verified",
     verifier_ref: "human:reviewer",
     verified_at: new Date().toISOString(),
-    receipt_ref: ""
+    receipt_ref: "receipt:forged"
   };
-  assert.throws(() => bridge.emitContribution({ contribution }), /complete recorded VERIFIED evidence/);
+  assert.throws(() => bridge.emitContribution({ contribution }), /VERIFICATION_UNRESOLVED/, "fully forged caller verification must not pass without a trusted record");
 });

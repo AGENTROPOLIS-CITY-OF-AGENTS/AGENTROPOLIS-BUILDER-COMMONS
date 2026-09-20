@@ -32,6 +32,17 @@ export class EventLog {
     this.clock = clock;
   }
 
+  // References (roomRef / actorRef / correlationRef) must be strings or null.
+  // They are stored as immutable snapshot values, so a caller cannot pass a
+  // mutable object and later rewrite historical records.
+  #assertRef(value, name) {
+    if (value === null) return null;
+    if (typeof value !== "string" || value.length === 0) {
+      throw new Error(`${name} must be a non-empty string or null`);
+    }
+    return value;
+  }
+
   append({ type, roomRef = null, actorRef = null, payload = {}, correlationRef = null }) {
     if (!EVENT_TYPES.has(type)) throw new Error(`unsupported event type: ${type}`);
     if (payload === null || typeof payload !== "object" || Array.isArray(payload)) {
@@ -41,13 +52,13 @@ export class EventLog {
     const event = {
       event_id: `evt-${this.#nextId++}`,
       type,
-      room_ref: roomRef,
-      actor_ref: actorRef,
-      correlation_ref: correlationRef,
+      room_ref: this.#assertRef(roomRef, "roomRef"),
+      actor_ref: this.#assertRef(actorRef, "actorRef"),
+      correlation_ref: this.#assertRef(correlationRef, "correlationRef"),
       occurred_at: new Date(this.clock()).toISOString(),
       payload: clone(payload)
     };
-    this.#events.push(event);
+    this.#events.push(clone(event));
     return clone(event);
   }
 
