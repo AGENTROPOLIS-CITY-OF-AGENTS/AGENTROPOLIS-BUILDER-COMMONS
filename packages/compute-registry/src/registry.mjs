@@ -2,7 +2,7 @@ import { can } from "../../capability-broker/src/grant.mjs";
 
 const PROVIDER_TYPES = new Set(["local", "community", "cloud", "edge"]);
 const STATUSES = new Set(["offline", "available", "reserved", "busy", "draining"]);
-const SECRET_KEY = /(api[_-]?key|access[_-]?token|secret|token|password|passwd|private[_-]?key|credential|wallet)/i;
+const SECRET_KEY = /(api[_-]?key|access[_-]?token|access[_-]?secret|secret|token|password|passwd|private[_-]?key|credential|creds|auth|wallet)/i;
 
 function clone(value) {
   return JSON.parse(JSON.stringify(value));
