@@ -65,3 +65,53 @@ Where practical:
 - agent interfaces remain adapter-based
 - settlement remains PAYRAIL-routed
 - spatial UI state must not be the only source of project truth
+
+
+## Phase 4 execution fabric
+
+Builder Commons now has a provider-neutral BYOE compute foundation.
+
+### Compute registration
+
+A compute resource can describe:
+- owner reference
+- local / community / cloud / edge provider type
+- CPU / memory / GPU / VRAM capabilities
+- availability state
+- sandbox requirements
+- optional subscription metadata
+- optional cost metadata
+- policy references
+
+Registration is descriptive only. A visible resource does **not** become executable authority.
+
+### Reservation authority
+
+Compute reservation requires an explicit capability grant whose:
+- subject matches the requester
+- resource matches the compute resource
+- permission includes `compute:reserve`
+- grant is active and not revoked or expired
+
+Release uses the same authority model through `compute:release`.
+
+### Routing
+
+The compute router is local-first by policy and can prefer an already-paid subscription when local preference is disabled or policy allows it.
+
+ATG does not own compute routing. ATG may express task requirements and constraints, while the compute infrastructure chooses eligible resources under policy.
+
+### Sandbox
+
+Unknown or untrusted execution is deny-by-default:
+- filesystem writes require scoped roots
+- network access requires an allowlist
+- tools require explicit approval
+- process spawning is disabled unless allowed
+- runtime ceilings are enforced
+
+### Quotas
+
+Cost, token, concurrency, and daily ceilings can be enforced per subject before execution.
+
+This keeps BYOE non-custodial: Builder Commons brokers access to user-owned resources rather than absorbing ownership of hardware, models, runtimes, subscriptions, or credentials.
