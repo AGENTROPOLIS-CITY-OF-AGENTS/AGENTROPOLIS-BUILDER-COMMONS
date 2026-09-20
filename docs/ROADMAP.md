@@ -79,7 +79,7 @@ Goal: a builder can enter, connect source, spawn a project space, invite a parti
 - [ ] richer 3D scene renderer
 - [x] Forge / Agent Dock / Compute Dock / Broadcast Tower / XR Portal projections
 - [x] project-room spatial interiors
-- [ ] WebXR adapter
+- [x] WebXR adapter
 - [ ] AR / VR clients
 
 ## Phase 6 — Economic rails
