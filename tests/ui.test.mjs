@@ -56,7 +56,7 @@ globalThis.document = {
 };
 
 // Import the app AFTER the DOM stub is installed (boot() runs on import).
-const { state, renderAll, spawnDemoCorridor, INTEGRATIONS } = await import("../apps/web/app.mjs");
+const { state, renderAll, spawnDemoCorridor, INTEGRATIONS, escapeHtml } = await import("../apps/web/app.mjs");
 
 test("application shell exposes the five surfaces", () => {
   const surfaces = ["atrium", "room", "dock", "integrations", "spatial"];
@@ -209,4 +209,33 @@ test("Phase 5 spatial surface preserves accessible 2D parity", () => {
   const serialized = JSON.stringify(state.spatialWorld);
   assert.equal(serialized.includes("permissions"), false, "spatial state must not carry execution permissions");
   assert.equal(serialized.includes("grant-verity-pr"), false, "spatial state must not carry capability grants");
+});
+
+
+test("Phase 5 shell escapes untrusted project and participant content", () => {
+  assert.equal(escapeHtml('<script>alert("x")</script>'), '&lt;script&gt;alert(&quot;x&quot;)&lt;/script&gt;');
+  assert.equal(escapeHtml('A&B'), 'A&amp;B');
+});
+
+test("Phase 5 2D parity includes project interior nodes", () => {
+  spawnDemoCorridor();
+  renderAll();
+  const parity = elements.get("[data-role='spatial-2d']");
+  assert.ok(parity.innerHTML.includes("PROJECT INTERIOR"));
+  assert.ok(parity.innerHTML.includes("Forge"));
+  assert.ok(parity.innerHTML.includes("Agent Dock"));
+  assert.ok(parity.innerHTML.includes("Compute Dock"));
+  assert.ok(parity.innerHTML.includes("Broadcast Tower"));
+  assert.ok(parity.innerHTML.includes("XR Portal"));
+});
+
+test("Phase 5 spatial projection and interior remain authority-free", () => {
+  spawnDemoCorridor();
+  renderAll();
+  const world = JSON.stringify(state.spatialWorld);
+  const interior = JSON.stringify(state.spatialInterior);
+  for (const forbidden of ["grant-verity-pr", "github:pr:create", "gho_mock_demo_token_never_persisted"]) {
+    assert.equal(world.includes(forbidden), false, `world must not contain ${forbidden}`);
+    assert.equal(interior.includes(forbidden), false, `interior must not contain ${forbidden}`);
+  }
 });
