@@ -430,3 +430,35 @@ The renderer receives sanitized projection data only. It must never receive raw 
 The first concrete renderer is the safe DOM/CSS fallback. Untrusted labels and participant names are written with DOM text APIs rather than concatenated HTML.
 
 Renderer selection does not change canonical state and does not grant execution authority. A renderer may emit a selection intent, which must still pass the governed execution corridor before any privileged effect occurs.
+
+
+## 15. WebXR adapter boundary
+
+WebXR is an optional presentation adapter over the spatial projection contract.
+
+Supported session modes:
+- immersive-vr
+- immersive-ar
+
+XR entry is explicit. Builder Commons does not request an immersive XR session automatically on page load.
+
+The WebXR adapter owns:
+- feature/session support detection
+- explicit session entry
+- explicit exit
+- reference-space negotiation
+- frame-loop lifecycle
+- input-source normalization
+- session teardown
+
+The adapter does not own project state, identity, mandates, capabilities, compute authority, or settlement authority.
+
+**XR SESSION != EXECUTION AUTHORITY.**
+
+**XR DEVICE PERMISSION != AGENTROPOLIS AUTHORIZATION.**
+
+An XR session or controller/input source can express interaction intent only. Any privileged action must still pass the normal AGENTROPOLIS governed execution corridor.
+
+Camera, microphone, geolocation, anchors, hit-test, hand tracking, eye tracking, recording, and screenshots are not silently activated by this adapter. Optional features require explicit client requests and platform permission handling.
+
+Unsupported browsers remain fully usable through desktop and accessible 2D modes.
