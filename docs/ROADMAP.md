@@ -76,7 +76,8 @@ Goal: a builder can enter, connect source, spawn a project space, invite a parti
 - [x] human / agent presence markers
 - [x] accessible 2D parity
 - [ ] richer 3D scene renderer
-- [ ] project-room spatial interiors
+- [x] Forge / Agent Dock / Compute Dock / Broadcast Tower / XR Portal projections
+- [x] project-room spatial interiors
 - [ ] WebXR adapter
 - [ ] AR / VR clients
 
