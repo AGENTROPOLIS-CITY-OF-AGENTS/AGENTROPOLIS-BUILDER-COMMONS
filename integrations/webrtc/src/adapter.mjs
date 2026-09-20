@@ -19,6 +19,8 @@ export function createWebRtcAdapter({ peerFactory, signalSender = null } = {}) {
   // Nested maps avoid delimiter-based composite-key collisions.
   const peers = new Map();
   const published = new Map();
+  // Serializes concurrent disconnectSession calls per peer (idempotency, D).
+  const disconnecting = new Map();
 
   function participantMap(root, sessionId, create = false) {
     let map = root.get(sessionId);
@@ -98,7 +100,23 @@ export function createWebRtcAdapter({ peerFactory, signalSender = null } = {}) {
       throw new Error("surface is already published");
     }
 
-    const senders = tracks.map((track) => connected.peer.addTrack(track, stream));
+    // A: add tracks incrementally inside rollback protection so a partial
+    // addTrack failure removes already-added senders and stops the tracks.
+    const senders = [];
+    try {
+      for (const track of tracks) {
+        senders.push(connected.peer.addTrack(track, stream));
+      }
+    } catch (error) {
+      for (const sender of senders) {
+        if (typeof connected.peer.removeTrack === "function") connected.peer.removeTrack(sender);
+      }
+      for (const track of tracks) {
+        if (typeof track.stop === "function") track.stop();
+      }
+      throw error;
+    }
+
     const record = { senders, tracks };
     surfaces.set(surfaceId, record);
 
@@ -117,7 +135,9 @@ export function createWebRtcAdapter({ peerFactory, signalSender = null } = {}) {
       }
     } catch (error) {
       cleanupPublication({ connected, record });
-      surfaces.delete(surfaceId);
+      // B: only delete the record if it is still the current entry, so a
+      // replacement publication published during pending signaling is preserved.
+      if (surfaces.get(surfaceId) === record) surfaces.delete(surfaceId);
       throw error;
     }
 
@@ -130,7 +150,7 @@ export function createWebRtcAdapter({ peerFactory, signalSender = null } = {}) {
     };
   }
 
-  async function unpublishSurface({ sessionId, participantRef, surfaceId }) {
+  async function unpublishSurface({ sessionId, participantRef, surfaceId, skipRenegotiation = false }) {
     requireString(sessionId, "sessionId");
     requireString(participantRef, "participantRef");
     requireString(surfaceId, "surfaceId");
@@ -139,12 +159,33 @@ export function createWebRtcAdapter({ peerFactory, signalSender = null } = {}) {
     const record = surfaces?.get(surfaceId);
     if (!record) return false;
 
-    cleanupPublication({ connected: getPeer(sessionId, participantRef), record });
+    const connected = getPeer(sessionId, participantRef);
+    cleanupPublication({ connected, record });
     surfaces.delete(surfaceId);
     if (surfaces.size === 0) {
       const byParticipant = participantMap(published, sessionId);
       byParticipant?.delete(participantRef);
       if (byParticipant?.size === 0) published.delete(sessionId);
+    }
+
+    // C: for an established peer, removeTrack alone does not update the remote
+    // description. Send a post-removal offer to renegotiate, unless this is
+    // part of a full disconnect teardown (which closes the peer).
+    if (!skipRenegotiation && connected && typeof signalSender === "function" && typeof connected.peer.createOffer === "function") {
+      try {
+        const offer = await connected.peer.createOffer();
+        if (typeof connected.peer.setLocalDescription === "function") {
+          await connected.peer.setLocalDescription(offer);
+        }
+        await signalSender({
+          session_id: sessionId,
+          participant_ref: participantRef,
+          type: "offer",
+          description: clone(offer)
+        });
+      } catch (error) {
+        // Renegotiation failure must not mask a successful unpublish.
+      }
     }
     return true;
   }
@@ -153,19 +194,29 @@ export function createWebRtcAdapter({ peerFactory, signalSender = null } = {}) {
     requireString(sessionId, "sessionId");
     requireString(participantRef, "participantRef");
 
-    const connected = getPeer(sessionId, participantRef);
-    if (!connected) return false;
+    const key = `${sessionId}\u0000${participantRef}`;
+    if (disconnecting.has(key)) return disconnecting.get(key);
+    const run = (async () => {
+      const connected = getPeer(sessionId, participantRef);
+      if (!connected) return false;
 
-    const surfaces = surfaceMap(sessionId, participantRef);
-    for (const surfaceId of [...(surfaces?.keys() || [])]) {
-      await unpublishSurface({ sessionId, participantRef, surfaceId });
+      const surfaces = surfaceMap(sessionId, participantRef);
+      for (const surfaceId of [...(surfaces?.keys() || [])]) {
+        await unpublishSurface({ sessionId, participantRef, surfaceId, skipRenegotiation: true });
+      }
+
+      connected.peer.close();
+      const byParticipant = participantMap(peers, sessionId);
+      byParticipant?.delete(participantRef);
+      if (byParticipant?.size === 0) peers.delete(sessionId);
+      return true;
+    })();
+    disconnecting.set(key, run);
+    try {
+      return await run;
+    } finally {
+      disconnecting.delete(key);
     }
-
-    connected.peer.close();
-    const byParticipant = participantMap(peers, sessionId);
-    byParticipant.delete(participantRef);
-    if (byParticipant.size === 0) peers.delete(sessionId);
-    return true;
   }
 
   const mediaAdapter = {
