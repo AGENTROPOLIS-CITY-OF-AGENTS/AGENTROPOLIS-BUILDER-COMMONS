@@ -23,9 +23,19 @@ import { EventLog } from "../../packages/events/src/event-log.mjs";
 import { createCbeBridge } from "../../integrations/cbe/src/bridge.mjs";
 import { createHermesAdapter } from "../../integrations/hermes/src/adapter.mjs";
 import { projectSpatialWorld, spatialWorldTo2D } from "../../packages/spatial-model/src/world.mjs";
+import { projectProjectRoomInterior, interiorTo2D } from "../../packages/spatial-model/src/interior.mjs";
 
 const $ = (sel) => document.querySelector(sel);
-const $$ = (sel) => [...document.querySelectorAll(sel)];
+const qsa = (sel) => [...document.querySelectorAll(sel)];
+
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+}
 
 // ---------------------------------------------------------------------------
 // Honest integration registry. Statuses: connected / available / planned / mock
@@ -113,7 +123,8 @@ const state = {
   contribution: null,
   opportunity: null,
   heartbeatTimer: null,
-  spatialWorld: null
+  spatialWorld: null,
+  spatialInterior: null
 };
 
 function renderIntegrations() {
@@ -139,9 +150,9 @@ function renderPresence() {
   host.innerHTML = records.map((p) => `
     <li>
       <span class="dot ${p.status}"></span>
-      <span>${p.display_name}</span>
+      <span>${escapeHtml(p.display_name)}</span>
       <span class="tag ${p.participant_type}">${p.participant_type.toUpperCase()}</span>
-      <span class="muted">${p.status}</span>
+      <span class="muted">${escapeHtml(p.status)}</span>
     </li>
   `).join("");
 }
@@ -165,14 +176,14 @@ function renderRoom() {
   $("[data-role='room-state']").textContent = room.state;
 
   $("[data-role='repo-refs']").innerHTML = room.repository_refs.length
-    ? room.repository_refs.map((r) => `<li>${r}</li>`).join("")
+    ? room.repository_refs.map((r) => `<li>${escapeHtml(r)}</li>`).join("")
     : `<li class="empty">No repositories connected.</li>`;
 
   const participants = room.participants.map((id) => {
     const p = state.registry.get(id);
     return p
-      ? `<li><span class="dot ${p.status}"></span><span>${p.display_name}</span><span class="tag ${p.participant_type}">${p.participant_type.toUpperCase()}</span></li>`
-      : `<li><span>${id}</span></li>`;
+      ? `<li><span class="dot ${p.status}"></span><span>${escapeHtml(p.display_name)}</span><span class="tag ${p.participant_type}">${p.participant_type.toUpperCase()}</span></li>`
+      : `<li><span>${escapeHtml(id)}</span></li>`;
   });
   $("[data-role='room-participants']").innerHTML = participants.length
     ? participants.join("")
@@ -180,15 +191,15 @@ function renderRoom() {
 
   const events = state.eventLog.list({ roomRef: room.room_id, limit: 8 });
   $("[data-role='activity-feed']").innerHTML = events.length
-    ? events.map((e) => `<li>${e.type}<span class="when">${new Date(e.occurred_at).toLocaleTimeString()}</span></li>`).join("")
+    ? events.map((e) => `<li>${escapeHtml(e.type)}<span class="when">${escapeHtml(new Date(e.occurred_at).toLocaleTimeString())}</span></li>`).join("")
     : `<li class="empty">No activity yet.</li>`;
 
   $("[data-role='evidence-feed']").innerHTML = room.contribution_evidence_refs.length
-    ? room.contribution_evidence_refs.map((e) => `<li>${e}</li>`).join("")
+    ? room.contribution_evidence_refs.map((e) => `<li>${escapeHtml(e)}</li>`).join("")
     : `<li class="empty">No contribution evidence recorded.</li>`;
 
   $("[data-role='receipt-refs']").innerHTML = room.receipt_refs.length
-    ? room.receipt_refs.map((r) => `<li>${r}</li>`).join("")
+    ? room.receipt_refs.map((r) => `<li>${escapeHtml(r)}</li>`).join("")
     : `<li class="empty">No receipts recorded.</li>`;
 }
 
@@ -207,25 +218,25 @@ function renderDock() {
     const grant = state.grant;
     const grantBlock = grant
       ? `<div class="dock-meta">
-           <div><dt>Grant</dt><dd>${grant.grant_id}</dd></div>
-           <div><dt>Resource</dt><dd>${grant.resource_ref}</dd></div>
-           <div><dt>Permissions</dt><dd>${grant.permissions.join(", ")}</dd></div>
-           <div><dt>Mandate</dt><dd>${grant.mandate_ref || "—"}</dd></div>
+           <div><dt>Grant</dt><dd>${escapeHtml(grant.grant_id)}</dd></div>
+           <div><dt>Resource</dt><dd>${escapeHtml(grant.resource_ref)}</dd></div>
+           <div><dt>Permissions</dt><dd>${escapeHtml(grant.permissions.join(", "))}</dd></div>
+           <div><dt>Mandate</dt><dd>${escapeHtml(grant.mandate_ref || "—")}</dd></div>
            <div><dt>Expires</dt><dd>${grant.expires_at ? new Date(grant.expires_at).toLocaleString() : "never"}</dd></div>
            <div><dt>Revoked</dt><dd>${grant.revoked_at ? "yes" : "no"}</dd></div>
          </div>`
       : `<p class="muted">No capability grant issued. Presence alone grants no authority.</p>`;
     return `
       <article class="panel dock-card">
-        <h2>${a.display_name}</h2>
-        <p class="provider">${a.runtime || "unknown-runtime"} · ${a.participant_id}</p>
+        <h2>${escapeHtml(a.display_name)}</h2>
+        <p class="provider">${escapeHtml(a.runtime || "unknown-runtime")} · ${escapeHtml(a.participant_id)}</p>
         <div class="dock-meta">
-          <div><dt>Status</dt><dd>${a.status}</dd></div>
+          <div><dt>Status</dt><dd>${escapeHtml(a.status)}</dd></div>
           <div><dt>Heartbeat</dt><dd>${a.heartbeat_at ? new Date(a.heartbeat_at).toLocaleTimeString() : "—"}</dd></div>
-          <div><dt>Mandate</dt><dd>${a.authority?.mandate_ref || "—"}</dd></div>
+          <div><dt>Mandate</dt><dd>${escapeHtml(a.authority?.mandate_ref || "—")}</dd></div>
           <div><dt>Expires</dt><dd>${a.authority?.expires_at ? new Date(a.authority.expires_at).toLocaleString() : "—"}</dd></div>
         </div>
-        ${a.declared_capabilities?.length ? `<ul class="cap-list">${a.declared_capabilities.map((c) => `<li>${c}</li>`).join("")}</ul>` : ""}
+        ${a.declared_capabilities?.length ? `<ul class="cap-list">${a.declared_capabilities.map((c) => `<li>${escapeHtml(c)}</li>`).join("")}</ul>` : ""}
         ${grantBlock}
       </article>`;
   }).join("");
@@ -251,8 +262,8 @@ function renderRecentProjects() {
   host.innerHTML = `
     <li>
       <span class="dot available"></span>
-      <span>${state.manifest.name}</span>
-      <span class="tag">${state.manifest.status}</span>
+      <span>${escapeHtml(state.manifest.name)}</span>
+      <span class="tag">${escapeHtml(state.manifest.status)}</span>
     </li>`;
 }
 
@@ -265,9 +276,9 @@ function renderOpportunityPreview() {
   host.innerHTML = `
     <li>
       <span class="dot available"></span>
-      <span>${state.opportunity.summary}</span>
-      <span class="tag">${state.opportunity.source}</span>
-      <span class="muted">${state.opportunity.status}</span>
+      <span>${escapeHtml(state.opportunity.summary)}</span>
+      <span class="tag">${escapeHtml(state.opportunity.source)}</span>
+      <span class="muted">${escapeHtml(state.opportunity.status)}</span>
     </li>`;
 }
 
@@ -287,15 +298,15 @@ function renderSpatial() {
     return `
       <article class="spatial-zone spatial-zone-${zone.type}" data-zone-id="${zone.zone_id}" style="--zone-index:${index}">
         <div class="spatial-zone-head">
-          <strong>${zone.label}</strong>
-          <span class="tag">${zone.type}</span>
+          <strong>${escapeHtml(zone.label)}</strong>
+          <span class="tag">${escapeHtml(zone.type)}</span>
         </div>
-        <span class="spatial-status">${zone.status}</span>
+        <span class="spatial-status">${escapeHtml(zone.status)}</span>
         <div class="spatial-markers">
           ${markers.map((marker) => `
-            <span class="spatial-marker ${marker.participant_type}" title="${marker.display_name} · ${marker.status}">
-              <i class="dot ${marker.status}"></i>
-              <span>${marker.display_name}</span>
+            <span class="spatial-marker ${marker.participant_type}" title="${escapeHtml(marker.display_name)} · ${escapeHtml(marker.status)}">
+              <i class="dot ${escapeHtml(marker.status)}"></i>
+              <span>${escapeHtml(marker.display_name)}</span>
             </span>
           `).join("")}
         </div>
@@ -303,17 +314,35 @@ function renderSpatial() {
     `;
   }).join("");
 
+  state.spatialInterior = state.room && state.manifest
+    ? projectProjectRoomInterior({
+        room: state.room,
+        manifest: state.manifest,
+        buildStatus: "idle",
+        broadcastStatus: "idle",
+        computeResources: []
+      })
+    : null;
+
   const parity = spatialWorldTo2D(state.spatialWorld);
   parityHost.innerHTML = `
     <h3>ZONES</h3>
     <ul class="ref-list">
-      ${parity.zones.map((zone) => `<li><strong>${zone.label}</strong> · ${zone.type} · ${zone.status}</li>`).join("")}
+      ${parity.zones.map((zone) => `<li><strong>${escapeHtml(zone.label)}</strong> · ${escapeHtml(zone.type)} · ${escapeHtml(zone.status)}</li>`).join("")}
     </ul>
     <h3>PARTICIPANTS</h3>
     <ul class="presence-list">
       ${parity.markers.length
-        ? parity.markers.map((marker) => `<li><span class="dot ${marker.status}"></span><span>${marker.display_name}</span><span class="tag ${marker.participant_type}">${marker.participant_type.toUpperCase()}</span></li>`).join("")
+        ? parity.markers.map((marker) => `<li><span class="dot ${escapeHtml(marker.status)}"></span><span>${escapeHtml(marker.display_name)}</span><span class="tag ${escapeHtml(marker.participant_type)}">${escapeHtml(marker.participant_type.toUpperCase())}</span></li>`).join("")
         : '<li class="empty">No participants projected.</li>'}
+    </ul>
+    <h3>PROJECT INTERIOR</h3>
+    <ul class="ref-list">
+      ${state.spatialInterior
+        ? interiorTo2D(state.spatialInterior).nodes.map((node) =>
+            `<li><strong>${escapeHtml(node.label)}</strong> · ${escapeHtml(node.node_type)} · ${escapeHtml(node.status)}</li>`
+          ).join("")
+        : '<li class="empty">No project interior projected.</li>'}
     </ul>
   `;
 }
@@ -489,12 +518,12 @@ function startHeartbeat() {
 // Navigation
 // ---------------------------------------------------------------------------
 function bindNavigation() {
-  $$(".nav-btn").forEach((btn) => {
+  qsa(".nav-btn").forEach((btn) => {
     btn.addEventListener("click", () => {
-      $$(".nav-btn").forEach((b) => b.classList.remove("is-active"));
+      qsa(".nav-btn").forEach((b) => b.classList.remove("is-active"));
       btn.classList.add("is-active");
       const target = btn.dataset.surface;
-      $$("[data-surface-panel]").forEach((panel) => {
+      qsa("[data-surface-panel]").forEach((panel) => {
         panel.classList.toggle("is-active", panel.dataset.surfacePanel === target);
       });
     });
@@ -530,4 +559,4 @@ if (typeof document !== "undefined") {
 }
 
 // Export for tests
-export { state, renderAll, spawnDemoCorridor, INTEGRATIONS };
+export { state, renderAll, spawnDemoCorridor, INTEGRATIONS, escapeHtml };
