@@ -1,7 +1,7 @@
 // AGENTROPOLIS Builder Commons — WebRTC media adapter
 //
 // Transport only. Collaboration state and authorization remain in packages/realtime.
-// This adapter will only publish a surface that the caller has already proven shareable.
+// This adapter publishes only explicitly approved, participant-owned surfaces.
 
 import { assertMediaAdapter } from "../../../packages/media-adapter/src/contract.mjs";
 
@@ -16,18 +16,40 @@ function requireString(value, name) {
 export function createWebRtcAdapter({ peerFactory, signalSender = null } = {}) {
   if (typeof peerFactory !== "function") throw new Error("peerFactory is required");
 
+  // Nested maps avoid delimiter-based composite-key collisions.
   const peers = new Map();
   const published = new Map();
 
-  function sessionKey(sessionId, participantRef) {
-    return `${sessionId}::${participantRef}`;
+  function participantMap(root, sessionId, create = false) {
+    let map = root.get(sessionId);
+    if (!map && create) {
+      map = new Map();
+      root.set(sessionId, map);
+    }
+    return map || null;
+  }
+
+  function surfaceMap(sessionId, participantRef, create = false) {
+    const byParticipant = participantMap(published, sessionId, create);
+    if (!byParticipant) return null;
+    let map = byParticipant.get(participantRef);
+    if (!map && create) {
+      map = new Map();
+      byParticipant.set(participantRef, map);
+    }
+    return map || null;
+  }
+
+  function getPeer(sessionId, participantRef) {
+    return participantMap(peers, sessionId)?.get(participantRef) || null;
   }
 
   async function connectSession({ sessionId, participantRef }) {
     requireString(sessionId, "sessionId");
     requireString(participantRef, "participantRef");
-    const key = sessionKey(sessionId, participantRef);
-    if (peers.has(key)) return peers.get(key).descriptor;
+
+    const existing = getPeer(sessionId, participantRef);
+    if (existing) return clone(existing.descriptor);
 
     const peer = peerFactory({ sessionId, participantRef });
     if (!peer || typeof peer.addTrack !== "function" || typeof peer.close !== "function") {
@@ -41,8 +63,17 @@ export function createWebRtcAdapter({ peerFactory, signalSender = null } = {}) {
       connected: true
     };
 
-    peers.set(key, { peer, descriptor });
+    participantMap(peers, sessionId, true).set(participantRef, { peer, descriptor });
     return clone(descriptor);
+  }
+
+  function cleanupPublication({ connected, record }) {
+    if (connected && typeof connected.peer.removeTrack === "function") {
+      for (const sender of record.senders) connected.peer.removeTrack(sender);
+    }
+    for (const track of record.tracks) {
+      if (typeof track.stop === "function") track.stop();
+    }
   }
 
   async function publishSurface({ session, participantRef, surfaceId, stream }) {
@@ -56,27 +87,38 @@ export function createWebRtcAdapter({ peerFactory, signalSender = null } = {}) {
     if (approved.owner_ref !== participantRef) throw new Error("participant does not own approved surface");
     if (!stream || typeof stream.getTracks !== "function") throw new Error("media stream is required");
 
-    const key = sessionKey(session.session_id, participantRef);
-    const connected = peers.get(key);
+    const connected = getPeer(session.session_id, participantRef);
     if (!connected) throw new Error("session transport is not connected");
 
-    const tracks = stream.getTracks();
+    const tracks = [...stream.getTracks()];
     if (!Array.isArray(tracks) || tracks.length === 0) throw new Error("media stream has no tracks");
 
-    const senders = tracks.map((track) => connected.peer.addTrack(track, stream));
-    published.set(`${key}::${surfaceId}`, { senders, stream });
+    const surfaces = surfaceMap(session.session_id, participantRef, true);
+    if (surfaces.has(surfaceId)) {
+      throw new Error("surface is already published");
+    }
 
-    if (typeof signalSender === "function" && typeof connected.peer.createOffer === "function") {
-      const offer = await connected.peer.createOffer();
-      if (typeof connected.peer.setLocalDescription === "function") {
-        await connected.peer.setLocalDescription(offer);
+    const senders = tracks.map((track) => connected.peer.addTrack(track, stream));
+    const record = { senders, tracks };
+    surfaces.set(surfaceId, record);
+
+    try {
+      if (typeof signalSender === "function" && typeof connected.peer.createOffer === "function") {
+        const offer = await connected.peer.createOffer();
+        if (typeof connected.peer.setLocalDescription === "function") {
+          await connected.peer.setLocalDescription(offer);
+        }
+        await signalSender({
+          session_id: session.session_id,
+          participant_ref: participantRef,
+          type: "offer",
+          description: clone(offer)
+        });
       }
-      await signalSender({
-        session_id: session.session_id,
-        participant_ref: participantRef,
-        type: "offer",
-        description: clone(offer)
-      });
+    } catch (error) {
+      cleanupPublication({ connected, record });
+      surfaces.delete(surfaceId);
+      throw error;
     }
 
     return {
@@ -92,45 +134,47 @@ export function createWebRtcAdapter({ peerFactory, signalSender = null } = {}) {
     requireString(sessionId, "sessionId");
     requireString(participantRef, "participantRef");
     requireString(surfaceId, "surfaceId");
-    const key = `${sessionKey(sessionId, participantRef)}::${surfaceId}`;
-    const record = published.get(key);
+
+    const surfaces = surfaceMap(sessionId, participantRef);
+    const record = surfaces?.get(surfaceId);
     if (!record) return false;
 
-    const connected = peers.get(sessionKey(sessionId, participantRef));
-    if (connected && typeof connected.peer.removeTrack === "function") {
-      for (const sender of record.senders) connected.peer.removeTrack(sender);
+    cleanupPublication({ connected: getPeer(sessionId, participantRef), record });
+    surfaces.delete(surfaceId);
+    if (surfaces.size === 0) {
+      const byParticipant = participantMap(published, sessionId);
+      byParticipant?.delete(participantRef);
+      if (byParticipant?.size === 0) published.delete(sessionId);
     }
-    for (const track of record.stream.getTracks()) {
-      if (typeof track.stop === "function") track.stop();
-    }
-    published.delete(key);
     return true;
   }
 
   async function disconnectSession({ sessionId, participantRef }) {
-    const key = sessionKey(sessionId, participantRef);
-    const connected = peers.get(key);
+    requireString(sessionId, "sessionId");
+    requireString(participantRef, "participantRef");
+
+    const connected = getPeer(sessionId, participantRef);
     if (!connected) return false;
 
-    for (const pubKey of [...published.keys()]) {
-      if (pubKey.startsWith(`${key}::`)) {
-        const surfaceId = pubKey.slice(key.length + 2);
-        await unpublishSurface({ sessionId, participantRef, surfaceId });
-      }
+    const surfaces = surfaceMap(sessionId, participantRef);
+    for (const surfaceId of [...(surfaces?.keys() || [])]) {
+      await unpublishSurface({ sessionId, participantRef, surfaceId });
     }
 
     connected.peer.close();
-    peers.delete(key);
+    const byParticipant = participantMap(peers, sessionId);
+    byParticipant.delete(participantRef);
+    if (byParticipant.size === 0) peers.delete(sessionId);
     return true;
   }
 
-  const adapter = {
+  const mediaAdapter = {
     connectSession,
     publishSurface,
     unpublishSurface,
     disconnectSession
   };
 
-  assertMediaAdapter(adapter);
-  return adapter;
+  assertMediaAdapter(mediaAdapter);
+  return mediaAdapter;
 }
