@@ -9,6 +9,7 @@ const required = [
   "docs/BYOE.md",
   "docs/CBE-INTEGRATION.md",
   "docs/HERMES-PORTAL.md",
+  "docs/PHASE5-ASSURANCE.md",
   "spec/project-manifest.schema.json",
   "spec/participant-presence.schema.json",
   "spec/contribution-evidence.schema.json",
