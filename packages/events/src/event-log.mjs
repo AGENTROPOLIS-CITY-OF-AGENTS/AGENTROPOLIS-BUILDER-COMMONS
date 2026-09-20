@@ -1,8 +1,7 @@
-// AGENTROPOLIS Builder Commons — Event Log (realtime preparation)
+// AGENTROPOLIS Builder Commons — Event Log
 //
-// A room's activity is an append-only event log, separate from room STATE,
-// AUTHORITY, and EVIDENCE. Events describe what happened; they never carry
-// secrets and never grant authority.
+// A room's activity is append-only and separate from STATE, AUTHORITY, and
+// EVIDENCE. Internal storage is private so consumers cannot rewrite history.
 
 const EVENT_TYPES = new Set([
   "room.created",
@@ -26,9 +25,11 @@ function clone(value) {
 }
 
 export class EventLog {
+  #events = [];
+  #nextId = 1;
+
   constructor({ clock = () => Date.now() } = {}) {
     this.clock = clock;
-    this.events = [];
   }
 
   append({ type, roomRef = null, actorRef = null, payload = {}, correlationRef = null }) {
@@ -38,7 +39,7 @@ export class EventLog {
     }
 
     const event = {
-      event_id: `evt-${this.events.length + 1}`,
+      event_id: `evt-${this.#nextId++}`,
       type,
       room_ref: roomRef,
       actor_ref: actorRef,
@@ -46,12 +47,12 @@ export class EventLog {
       occurred_at: new Date(this.clock()).toISOString(),
       payload: clone(payload)
     };
-    this.events.push(event);
+    this.#events.push(event);
     return clone(event);
   }
 
   list({ roomRef = null, limit = null } = {}) {
-    let events = this.events;
+    let events = this.#events;
     if (roomRef !== null) events = events.filter((e) => e.room_ref === roomRef);
     if (limit !== null && Number.isInteger(limit) && limit > 0) {
       events = events.slice(-limit);
@@ -60,8 +61,6 @@ export class EventLog {
   }
 
   count() {
-    return this.events.length;
+    return this.#events.length;
   }
-
-  // Events are append-only; there is no mutation or deletion.
 }
