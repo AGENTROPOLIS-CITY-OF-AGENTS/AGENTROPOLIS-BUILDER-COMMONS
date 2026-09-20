@@ -125,3 +125,22 @@ test("project projection does not mutate canonical room or presence inputs", () 
   assert.equal(JSON.stringify(room), beforeRoom);
   assert.equal(JSON.stringify(presences), beforePresences);
 });
+
+
+test("spatial identifiers reject attribute and selector injection characters", () => {
+  const world = createSpatialWorld({ worldId: "commons" });
+  assert.throws(() => addSpatialZone(world, {
+    zoneId: 'zone" onclick="alert(1)',
+    type: "project",
+    label: "Unsafe"
+  }), /unsupported characters/);
+
+  addSpatialZone(world, { zoneId: "safe-zone:1", type: "project", label: "Safe" });
+  assert.throws(() => addPresenceMarker(world, {
+    markerId: 'marker] [autofocus',
+    participantRef: "agent:test",
+    zoneId: "safe-zone:1",
+    participantType: "agent",
+    displayName: "Unsafe marker"
+  }), /unsupported characters/);
+});
