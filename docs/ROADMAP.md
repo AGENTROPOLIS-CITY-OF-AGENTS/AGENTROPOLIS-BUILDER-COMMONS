@@ -43,13 +43,15 @@ Goal: a builder can enter, connect source, spawn a project space, invite a parti
 
 ## Phase 3 — Real-time collaboration
 
-- WebRTC
-- screen sharing
-- shared cursor / annotations
-- terminal / browser / app surface handoff
-- session recording
-- Broadcast Tower primitives
-- OBS / streaming integration
+- [x] provider-neutral realtime session core
+- [x] explicit approved-surface sharing model
+- [x] shared pointer / annotation primitives
+- [x] recording + broadcast session metadata
+- [x] provider-neutral media adapter contract
+- [ ] WebRTC transport adapter
+- [ ] terminal / browser / app surface handoff transport
+- [ ] Broadcast Tower live transport
+- [ ] OBS / streaming integration
 
 ## Phase 4 — BYOE + compute
 
