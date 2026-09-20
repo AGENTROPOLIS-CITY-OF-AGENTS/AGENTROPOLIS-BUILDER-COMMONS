@@ -26,7 +26,7 @@ import { projectSpatialWorld, spatialWorldTo2D } from "../../packages/spatial-mo
 import { projectProjectRoomInterior, interiorTo2D } from "../../packages/spatial-model/src/interior.mjs";
 
 const $ = (sel) => document.querySelector(sel);
-const $ = (sel) => [...document.querySelectorAll(sel)];
+const qsa = (sel) => [...document.querySelectorAll(sel)];
 
 function escapeHtml(value) {
   return String(value ?? "")
@@ -518,12 +518,12 @@ function startHeartbeat() {
 // Navigation
 // ---------------------------------------------------------------------------
 function bindNavigation() {
-  $$(".nav-btn").forEach((btn) => {
+  qsa(".nav-btn").forEach((btn) => {
     btn.addEventListener("click", () => {
-      $$(".nav-btn").forEach((b) => b.classList.remove("is-active"));
+      qsa(".nav-btn").forEach((b) => b.classList.remove("is-active"));
       btn.classList.add("is-active");
       const target = btn.dataset.surface;
-      $$("[data-surface-panel]").forEach((panel) => {
+      qsa("[data-surface-panel]").forEach((panel) => {
         panel.classList.toggle("is-active", panel.dataset.surfacePanel === target);
       });
     });
