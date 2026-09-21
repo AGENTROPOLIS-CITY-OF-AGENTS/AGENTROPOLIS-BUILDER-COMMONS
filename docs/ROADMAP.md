@@ -64,6 +64,8 @@ Goal: a builder can enter, connect source, spawn a project space, invite a parti
 - [x] fail-closed sandbox policy
 - [x] cost / quota policy
 - [ ] production compute executors
+- [ ] Omarchy Local Dock via HERDR / AGENT-MCP
+- [ ] bounded Context Capsule handoff for local workstations
 - [ ] live provider adapters
 - [ ] execution receipt persistence
 
