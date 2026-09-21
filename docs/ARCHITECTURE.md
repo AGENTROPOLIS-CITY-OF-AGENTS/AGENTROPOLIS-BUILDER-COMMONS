@@ -329,3 +329,92 @@ grants execution authority. Registration, presence, and display are
 descriptive only. Execution authority arrives exclusively through an explicit,
 scoped, expiring capability grant (compute:reserve / compute:release /
 compute:execute, model:invoke, runtime:execute) checked by the governed gate.
+
+
+## 12. Omarchy Local Dock / BYOE workstation boundary
+
+Omarchy may be used as a governed local operator and developer workstation for Builder Commons.
+
+Builder Commons does **not** own Omarchy, the physical machine, the local filesystem, host credentials, local runtime accounts, or shell authority.
+
+The Commons consumes a bounded workstation projection through the Utility Grid / HERDR / AGENTROPOLIS-AGENT-MCP path:
+
+```text
+Human / Mission Control
+      ↓
+Omarchy Workstation
+      ↓
+HERDR managed workspace
+      ↓
+AGENTROPOLIS-AGENT-MCP
+      ↓
+Builder Commons Local Dock
+      ↓
+Hermes orchestration
+      ↓
+Codex / approved worker
+      ↓
+Execution Envelope
+      ↓
+AEGIS / 54T / VERITY
+      ↓
+Receipt / Audit
+```
+
+### Local Dock may display
+
+- opaque machine profile ID
+- operator-visible workstation label
+- host environment
+- trust/readiness state
+- connectivity state
+- declared workspace/runtime/tool capability names
+- bounded compute characteristics
+- current reservation state
+- safe Context Capsule references
+- receipt references
+
+### Local Dock must not display or persist
+
+- API tokens
+- SSH private keys
+- wallet secrets or seed phrases
+- browser cookies
+- raw environment variables
+- unrestricted filesystem paths
+- Docker socket handles
+- raw MCP credentials
+- hidden-window state
+- private agent memory
+- unredacted terminal history
+
+### Authority invariant
+
+**MACHINE ACCESS != AUTHORITY.**
+
+A connected Omarchy workstation, checked-out repository, running terminal, local runtime, browser session, or visible compute resource cannot grant Builder Commons execution authority.
+
+Reservation and execution still require explicit scoped capability grants and the governed execution corridor.
+
+### Runtime roles
+
+- Hermes is the orchestration/runtime coordinator.
+- Codex is a preferred software-engineering worker.
+- Grok or another creative worker may be used as a bounded visual/creative reviewer.
+- VERITY validates evidence.
+- 54T orchestrates assurance.
+- AEGIS owns policy/risk gating.
+
+No worker identity grants authority.
+
+### Continuity Plane
+
+Omarchy can host the local workspace used for Continuity Plane handoff.
+
+Cross-runtime continuation uses a bounded Context Capsule containing safe references such as repo, branch, HEAD, task, mandate, decisions, constraints, test status, unresolved blockers, and receipt/evidence references.
+
+Context Capsules exclude raw secrets, unrestricted terminal transcripts, private model state, and hidden chain-of-thought.
+
+### Portability
+
+The Local Dock contract is host-portable. Omarchy is an approved workstation implementation, not a Builder Commons dependency. Equivalent adapters may support Ubuntu, macOS, Windows, DGX systems, cloud VMs, edge machines, and future workstation environments.
