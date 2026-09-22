@@ -329,3 +329,156 @@ grants execution authority. Registration, presence, and display are
 descriptive only. Execution authority arrives exclusively through an explicit,
 scoped, expiring capability grant (compute:reserve / compute:release /
 compute:execute, model:invoke, runtime:execute) checked by the governed gate.
+
+
+## 12. Spatial interface boundary
+
+Phase 5 introduces a spatial projection layer without moving canonical state into a 3D engine.
+
+```text
+Canonical Builder Commons state
+        ↓
+Spatial Projection Model
+        ├── Builder Atrium
+        ├── Project Buildings
+        ├── Presence / Status Markers
+        └── Future XR renderer
+        ↓
+Accessible 2D parity
+```
+
+### Ownership boundary
+
+The spatial model owns presentation-oriented placement and projection state only.
+
+It does **not** own:
+- identity
+- authority
+- mandates
+- capability grants
+- project-room truth
+- repository truth
+- compute authority
+- payment authority
+- receipts
+
+A building, avatar, marker, room object, or spatial interaction cannot grant execution authority.
+
+### Canonical-state rule
+
+Project buildings are projections of canonical project/project-room state. Human and agent markers are projections of the presence registry. Spatial clients may request actions, but governed actions must still pass the normal identity → mandate → policy → permission → execution → receipt corridor.
+
+### 2D parity rule
+
+**Spectacle is optional. Function is not.**
+
+Every navigationally or operationally meaningful spatial object must have an accessible non-spatial equivalent. The current web shell therefore exposes the same zones and participant markers through an ordinary 2D list alongside the spatial projection.
+
+### Provider neutrality
+
+The spatial model is renderer-neutral. Future Three.js, WebGPU, WebXR, native XR, or other renderers consume the projection contract rather than becoming dependencies of Builder Commons core.
+
+
+## 13. Spatial project-room interiors and functional zones
+
+Project-room interiors are projection contracts over canonical room/project state. They contain safe references and interaction intents, not privileged executors.
+
+Projected interior surfaces include:
+- Project Lobby
+- Repository nodes
+- Task Board
+- Evidence Wall
+- Receipt / Audit Desk
+- Collaboration Table
+- Build Status
+- Broadcast / Media Area
+- Forge
+- Agent Dock
+- Compute Dock
+- Broadcast Tower
+- XR Portal
+
+### Intent boundary
+
+Spatial interaction emits intent such as `request-build`, `request-review`, `inspect-compute-resource`, or `request-xr-mode`.
+
+The projection does not execute those actions. Requests must cross the normal governed authority corridor before any privileged effect occurs.
+
+### Safe-reference rule
+
+Interior state contains references and bounded summaries. It must never contain raw capability grants, API keys, provider credentials, wallet keys, private agent memory, hidden-window state, or media capture handles.
+
+### Parity rule
+
+Every projected interior node is represented in accessible 2D parity. A renderer may add spectacle, but it cannot remove the ordinary navigational path.
+
+
+## 14. Renderer adapter boundary
+
+Spatial projection state is consumed through a renderer-neutral contract. Renderers are replaceable presentation adapters and are not trusted authority components.
+
+Required renderer lifecycle:
+- mount
+- renderWorld
+- updateWorld
+- focusZone
+- selectEntity
+- dispose
+
+The renderer receives sanitized projection data only. It must never receive raw credential stores, capability stores, wallet secrets, private agent memory, or authoritative service handles.
+
+The first concrete renderer is the safe DOM/CSS fallback. Untrusted labels and participant names are written with DOM text APIs rather than concatenated HTML.
+
+Renderer selection does not change canonical state and does not grant execution authority. A renderer may emit a selection intent, which must still pass the governed execution corridor before any privileged effect occurs.
+
+
+## 15. WebXR adapter boundary
+
+WebXR is an optional presentation adapter over the spatial projection contract.
+
+Supported session modes:
+- immersive-vr
+- immersive-ar
+
+XR entry is explicit. Builder Commons does not request an immersive XR session automatically on page load.
+
+The WebXR adapter owns:
+- feature/session support detection
+- explicit session entry
+- explicit exit
+- reference-space negotiation
+- frame-loop lifecycle
+- input-source normalization
+- session teardown
+
+The adapter does not own project state, identity, mandates, capabilities, compute authority, or settlement authority.
+
+**XR SESSION != EXECUTION AUTHORITY.**
+
+**XR DEVICE PERMISSION != AGENTROPOLIS AUTHORIZATION.**
+
+An XR session or controller/input source can express interaction intent only. Any privileged action must still pass the normal AGENTROPOLIS governed execution corridor.
+
+Camera, microphone, geolocation, anchors, hit-test, hand tracking, eye tracking, recording, and screenshots are not silently activated by this adapter. Optional features require explicit client requests and platform permission handling.
+
+Unsupported browsers remain fully usable through desktop and accessible 2D modes.
+
+
+## 16. Browser AR / VR client controllers
+
+Browser XR client controllers consume the same renderer-neutral spatial projection contract used by desktop mode.
+
+VR and AR controllers own:
+- explicit enter/exit lifecycle
+- projection presentation
+- zone/entity selection intent
+- action-request intent
+- client-mode state
+
+They do not own execution authority.
+
+Selections, gaze, controller rays, device pose, anchors, or proximity are presentation/input signals only. They may emit governed intents such as `spatial.action.request`, but those intents must pass the normal AGENTROPOLIS identity, mandate, policy, capability, execution, receipt, and audit corridor.
+
+AR anchors and placement are not identity proofs, authority proofs, project truth, room truth, or physical-safety guarantees.
+
+No automatic recording, screenshot capture, microphone activation, or background capture is introduced by the browser client controllers.
