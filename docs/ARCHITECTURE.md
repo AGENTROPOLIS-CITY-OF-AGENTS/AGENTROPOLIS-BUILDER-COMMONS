@@ -329,3 +329,51 @@ grants execution authority. Registration, presence, and display are
 descriptive only. Execution authority arrives exclusively through an explicit,
 scoped, expiring capability grant (compute:reserve / compute:release /
 compute:execute, model:invoke, runtime:execute) checked by the governed gate.
+
+
+## 12. Spatial interface boundary
+
+Phase 5 introduces a spatial projection layer without moving canonical state into a 3D engine.
+
+```text
+Canonical Builder Commons state
+        ↓
+Spatial Projection Model
+        ├── Builder Atrium
+        ├── Project Buildings
+        ├── Presence / Status Markers
+        └── Future XR renderer
+        ↓
+Accessible 2D parity
+```
+
+### Ownership boundary
+
+The spatial model owns presentation-oriented placement and projection state only.
+
+It does **not** own:
+- identity
+- authority
+- mandates
+- capability grants
+- project-room truth
+- repository truth
+- compute authority
+- payment authority
+- receipts
+
+A building, avatar, marker, room object, or spatial interaction cannot grant execution authority.
+
+### Canonical-state rule
+
+Project buildings are projections of canonical project/project-room state. Human and agent markers are projections of the presence registry. Spatial clients may request actions, but governed actions must still pass the normal identity → mandate → policy → permission → execution → receipt corridor.
+
+### 2D parity rule
+
+**Spectacle is optional. Function is not.**
+
+Every navigationally or operationally meaningful spatial object must have an accessible non-spatial equivalent. The current web shell therefore exposes the same zones and participant markers through an ordinary 2D list alongside the spatial projection.
+
+### Provider neutrality
+
+The spatial model is renderer-neutral. Future Three.js, WebGPU, WebXR, native XR, or other renderers consume the projection contract rather than becoming dependencies of Builder Commons core.
