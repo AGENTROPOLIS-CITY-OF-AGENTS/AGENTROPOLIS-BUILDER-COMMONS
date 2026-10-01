@@ -58,8 +58,8 @@ globalThis.document = {
 // Import the app AFTER the DOM stub is installed (boot() runs on import).
 const { state, renderAll, spawnDemoCorridor, INTEGRATIONS } = await import("../apps/web/app.mjs");
 
-test("application shell exposes the four surfaces", () => {
-  const surfaces = ["atrium", "room", "dock", "integrations"];
+test("application shell exposes the five surfaces", () => {
+  const surfaces = ["atrium", "room", "dock", "integrations", "spatial"];
   for (const s of surfaces) {
     assert.ok(shellHtml.includes(`data-surface-panel="${s}"`), `surface ${s} must be present in the shell markup`);
   }
@@ -188,4 +188,25 @@ test("P2-7 respawning the demo room does not accumulate stale duplicate events",
   assert.equal(secondCount, firstCount, "respawn must reset the event log, not duplicate stale entries");
   const types = state.eventLog.list().map((e) => e.type);
   assert.equal(types.filter((t) => t === "room.created").length, 1, "room.created must appear exactly once per fresh respawn");
+});
+
+
+test("Phase 5 spatial surface preserves accessible 2D parity", () => {
+  spawnDemoCorridor();
+  renderAll();
+
+  assert.ok(shellHtml.includes('data-surface-panel="spatial"'), "spatial surface must exist");
+  assert.ok(shellHtml.includes("ACCESSIBLE 2D PARITY"), "2D parity surface must be explicit");
+
+  const spatial = elements.get("[data-role='spatial-world']");
+  const parity = elements.get("[data-role='spatial-2d']");
+  assert.ok(spatial.innerHTML.includes("Builder Atrium"), "spatial projection must include Builder Atrium");
+  assert.ok(spatial.innerHTML.includes("Demo"), "project room must project as a project building");
+  assert.ok(spatial.innerHTML.includes("VERITY"), "agent presence must project as a marker");
+  assert.ok(parity.innerHTML.includes("Builder Atrium"), "2D parity must expose the same navigable zone");
+  assert.ok(parity.innerHTML.includes("VERITY"), "2D parity must expose projected participants");
+
+  const serialized = JSON.stringify(state.spatialWorld);
+  assert.equal(serialized.includes("permissions"), false, "spatial state must not carry execution permissions");
+  assert.equal(serialized.includes("grant-verity-pr"), false, "spatial state must not carry capability grants");
 });

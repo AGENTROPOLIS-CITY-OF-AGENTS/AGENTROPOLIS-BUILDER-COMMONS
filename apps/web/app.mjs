@@ -1,7 +1,7 @@
 // AGENTROPOLIS Builder Commons — executable application shell (v0.1)
 // Wires the existing packages (presence, capability-broker, contribution,
 // project-room, repository-adapter, commons-core) into the four surfaces:
-//   Builder Atrium / Project Room / Agent Dock / Integrations
+//   Builder Atrium / Project Room / Agent Dock / Integrations / Spatial
 //
 // Governance invariants enforced here:
 //   - presence is descriptive and NEVER grants authority
@@ -22,6 +22,7 @@ import { CredentialBroker } from "../../packages/credential-broker/src/broker.mj
 import { EventLog } from "../../packages/events/src/event-log.mjs";
 import { createCbeBridge } from "../../integrations/cbe/src/bridge.mjs";
 import { createHermesAdapter } from "../../integrations/hermes/src/adapter.mjs";
+import { projectSpatialWorld, spatialWorldTo2D } from "../../packages/spatial-model/src/world.mjs";
 
 const $ = (sel) => document.querySelector(sel);
 const $$ = (sel) => [...document.querySelectorAll(sel)];
@@ -111,7 +112,8 @@ const state = {
   grant: null,
   contribution: null,
   opportunity: null,
-  heartbeatTimer: null
+  heartbeatTimer: null,
+  spatialWorld: null
 };
 
 function renderIntegrations() {
@@ -269,6 +271,53 @@ function renderOpportunityPreview() {
     </li>`;
 }
 
+function renderSpatial() {
+  const worldHost = $("[data-role='spatial-world']");
+  const parityHost = $("[data-role='spatial-2d']");
+  if (!worldHost || !parityHost) return;
+
+  state.spatialWorld = projectSpatialWorld({
+    room: state.room,
+    manifest: state.manifest,
+    presences: state.registry.list()
+  });
+
+  worldHost.innerHTML = state.spatialWorld.zones.map((zone, index) => {
+    const markers = state.spatialWorld.markers.filter((m) => m.zone_id === zone.zone_id);
+    return `
+      <article class="spatial-zone spatial-zone-${zone.type}" data-zone-id="${zone.zone_id}" style="--zone-index:${index}">
+        <div class="spatial-zone-head">
+          <strong>${zone.label}</strong>
+          <span class="tag">${zone.type}</span>
+        </div>
+        <span class="spatial-status">${zone.status}</span>
+        <div class="spatial-markers">
+          ${markers.map((marker) => `
+            <span class="spatial-marker ${marker.participant_type}" title="${marker.display_name} · ${marker.status}">
+              <i class="dot ${marker.status}"></i>
+              <span>${marker.display_name}</span>
+            </span>
+          `).join("")}
+        </div>
+      </article>
+    `;
+  }).join("");
+
+  const parity = spatialWorldTo2D(state.spatialWorld);
+  parityHost.innerHTML = `
+    <h3>ZONES</h3>
+    <ul class="ref-list">
+      ${parity.zones.map((zone) => `<li><strong>${zone.label}</strong> · ${zone.type} · ${zone.status}</li>`).join("")}
+    </ul>
+    <h3>PARTICIPANTS</h3>
+    <ul class="presence-list">
+      ${parity.markers.length
+        ? parity.markers.map((marker) => `<li><span class="dot ${marker.status}"></span><span>${marker.display_name}</span><span class="tag ${marker.participant_type}">${marker.participant_type.toUpperCase()}</span></li>`).join("")
+        : '<li class="empty">No participants projected.</li>'}
+    </ul>
+  `;
+}
+
 function renderAll() {
   renderIntegrations();
   renderPresence();
@@ -277,6 +326,7 @@ function renderAll() {
   renderSystemStatus();
   renderRecentProjects();
   renderOpportunityPreview();
+  renderSpatial();
 }
 
 // ---------------------------------------------------------------------------
@@ -472,7 +522,7 @@ function boot() {
   bindActions();
   renderAll();
   startHeartbeat();
-  console.info("AGENTROPOLIS Builder Commons v0.1 — Build different. Together.");
+  console.info("AGENTROPOLIS Builder Commons v0.5 — Build different. Together.");
 }
 
 if (typeof document !== "undefined") {
