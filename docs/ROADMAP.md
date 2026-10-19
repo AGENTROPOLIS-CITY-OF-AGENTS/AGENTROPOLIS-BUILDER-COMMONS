@@ -69,14 +69,17 @@ Goal: a builder can enter, connect source, spawn a project space, invite a parti
 
 ## Phase 5 — Spatial interface
 
-- 3D Builder Atrium
-- project buildings
-- project rooms
-- status visualization
-- agent avatars / status markers
-- accessible 2D parity
-- WebXR
-- AR / VR clients
+- [x] 3D Builder Atrium scaffold
+- [x] status visualization from live Commons state
+- [x] agent status markers
+- [x] accessible 2D parity toggle
+- [ ] project buildings backed by real project manifests
+- [ ] spatial project rooms with selectable governed surfaces
+- [ ] richer avatar/presence representation
+- [ ] WebXR
+- [ ] AR / VR clients
+
+Phase 5 implementation rule: spatial UI is a progressive enhancement over the existing governed collaboration model. 3D must never become an authority source, secret store, or prerequisite for accessible operation.
 
 ## Phase 6 — Economic rails
 
