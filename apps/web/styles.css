@@ -278,3 +278,97 @@ footer {
   .status { text-align: left; }
   .room-head { flex-direction: column; }
 }
+
+
+/* ---------- Phase 5 spatial interface ---------- */
+.spatial-section {
+  margin: 0 0 1.75rem;
+  padding: 1rem 0 0;
+}
+.spatial-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 1rem;
+  margin-bottom: .8rem;
+}
+.spatial-head h2 {
+  margin: 0;
+  font-family: var(--ag-font-display);
+  font-size: clamp(1.4rem, 3vw, 2.2rem);
+}
+.spatial-mode {
+  display: flex;
+  gap: .5rem;
+}
+.spatial-mode .is-active {
+  color: #001014;
+  background: var(--ag-cyan);
+  border-color: var(--ag-cyan);
+}
+.spatial-shell {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--ag-border);
+  border-radius: var(--ag-radius-md);
+  background:
+    radial-gradient(circle at 50% 42%, rgba(52,232,255,.10), transparent 35%),
+    linear-gradient(180deg, rgba(7,12,16,.98), rgba(2,4,6,.98));
+  min-height: 260px;
+}
+.spatial-shell[hidden] {
+  display: none;
+}
+.spatial-shell canvas {
+  display: block;
+  width: 100%;
+  min-height: 260px;
+  touch-action: pan-y;
+}
+.spatial-legend {
+  position: absolute;
+  left: 1rem;
+  bottom: 1rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: .65rem;
+  padding: .5rem .65rem;
+  border: 1px solid rgba(88,235,255,.15);
+  border-radius: var(--ag-radius-sm);
+  background: rgba(2,6,9,.72);
+  backdrop-filter: blur(12px);
+  font-family: var(--ag-font-mono);
+  font-size: .62rem;
+  letter-spacing: .08em;
+  color: var(--ag-text-muted);
+}
+.spatial-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: .35rem;
+}
+.spatial-legend i {
+  width: .55rem;
+  height: .55rem;
+  border-radius: 2px;
+  display: inline-block;
+}
+.legend-atrium { background: var(--ag-cyan); }
+.legend-project { background: var(--ag-red); }
+.legend-agent { background: var(--ag-pink); }
+.spatial-status {
+  margin: .5rem 0 0;
+  font-family: var(--ag-font-mono);
+  font-size: .7rem;
+  letter-spacing: .08em;
+  color: var(--ag-text-muted);
+}
+.spatial-status[data-tone="ok"] { color: var(--ag-lime); }
+.spatial-status[data-tone="warn"] { color: var(--ag-warning); }
+
+@media (max-width: 700px) {
+  .spatial-head {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
