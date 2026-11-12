@@ -269,6 +269,19 @@ function renderOpportunityPreview() {
     </li>`;
 }
 
+function emitSpatialState() {
+  const records = state.registry.list();
+  window.dispatchEvent(new CustomEvent("buildercommons:state", {
+    detail: {
+      projects: state.manifest ? 1 : 0,
+      participants: records.length,
+      agents: records.filter((p) => p.participant_type === "agent").length,
+      roomOpen: Boolean(state.room),
+      roomName: state.manifest?.name || "Builder Commons"
+    }
+  }));
+}
+
 function renderAll() {
   renderIntegrations();
   renderPresence();
@@ -277,6 +290,7 @@ function renderAll() {
   renderSystemStatus();
   renderRecentProjects();
   renderOpportunityPreview();
+  emitSpatialState();
 }
 
 // ---------------------------------------------------------------------------

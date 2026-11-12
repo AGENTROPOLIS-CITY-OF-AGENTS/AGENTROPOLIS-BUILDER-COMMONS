@@ -36,6 +36,29 @@
         <p class="sublead">A persistent collaborative build world for humans + agents.</p>
       </div>
 
+      <section class="spatial-section" aria-labelledby="spatial-title">
+        <div class="spatial-head">
+          <div>
+            <p class="eyebrow">PHASE 5 · SPATIAL INTERFACE</p>
+            <h2 id="spatial-title">3D BUILDER ATRIUM</h2>
+            <p class="sublead">Spatial navigation over the same governed collaboration state. 2D parity remains available.</p>
+          </div>
+          <div class="spatial-mode" role="group" aria-label="Interface mode">
+            <button type="button" class="secondary is-active" data-spatial-mode="3d" aria-pressed="true">3D</button>
+            <button type="button" class="secondary" data-spatial-mode="2d" aria-pressed="false">2D</button>
+          </div>
+        </div>
+        <div class="spatial-shell" data-spatial-shell>
+          <canvas data-spatial-canvas aria-label="Interactive 3D Builder Commons atrium. Drag to orbit and use the mouse wheel to zoom."></canvas>
+          <div class="spatial-legend" aria-hidden="true">
+            <span><i class="legend-atrium"></i>ATRIUM</span>
+            <span><i class="legend-project"></i>PROJECT SPACE</span>
+            <span><i class="legend-agent"></i>AGENT</span>
+          </div>
+        </div>
+        <p class="spatial-status" data-spatial-status aria-live="polite">INITIALIZING 3D BUILDER ATRIUM…</p>
+      </section>
+
       <div class="atrium-grid">
         <article class="panel">
           <h2>RECENT PROJECTS</h2>
@@ -173,6 +196,7 @@
     <span>AGENTROPOLIS DESIGN SYSTEM</span>
   </footer>
 
+  <script type="module" src="./spatial.mjs"></script>
   <script type="module" src="./app.mjs"></script>
 </body>
 </html>
