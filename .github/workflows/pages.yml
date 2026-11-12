@@ -33,6 +33,7 @@ jobs:
           rm -rf _site
           mkdir -p _site/site _site/packages/design-system _site/docs
           cp index.html _site/index.html
+          cp agentropolis-loop-baseline.js _site/agentropolis-loop-baseline.js
           cp site/styles.css _site/site/styles.css
           cp site/app.mjs _site/site/app.mjs
           cp packages/design-system/tokens.css _site/packages/design-system/tokens.css
