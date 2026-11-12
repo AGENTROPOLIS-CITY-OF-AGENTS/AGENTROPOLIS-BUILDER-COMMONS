@@ -12,9 +12,9 @@ body {
   min-height: 100vh;
   overflow-x: hidden;
   background:
-    radial-gradient(circle at 18% 8%, rgba(52,232,255,.12), transparent 28rem),
-    radial-gradient(circle at 85% 18%, rgba(255,32,94,.10), transparent 30rem),
-    linear-gradient(180deg, #05080b 0%, #030506 100%);
+    radial-gradient(circle at 18% 8%, rgba(0,229,255,.12), transparent 28rem),
+    radial-gradient(circle at 85% 18%, rgba(255,38,56,.10), transparent 30rem),
+    linear-gradient(180deg, #0A0F18 0%, #080B10 100%);
 }
 
 .grid {
@@ -23,8 +23,8 @@ body {
   pointer-events: none;
   opacity: .18;
   background-image:
-    linear-gradient(rgba(52,232,255,.09) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(52,232,255,.09) 1px, transparent 1px);
+    linear-gradient(rgba(0,229,255,.09) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,229,255,.09) 1px, transparent 1px);
   background-size: 48px 48px;
   mask-image: linear-gradient(to bottom, #000 0%, transparent 82%);
 }
@@ -67,8 +67,14 @@ body {
   height: .55rem;
   margin-right: .5rem;
   border-radius: 999px;
-  background: var(--ag-lime);
-  box-shadow: 0 0 18px rgba(157,255,66,.7);
+  background: var(--ag-cyan);
+  box-shadow: 0 0 18px rgba(0,229,255,.7);
+  animation: bc-live-pulse 1.9s infinite;
+}
+
+@keyframes bc-live-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: .45; }
 }
 
 main {
@@ -178,8 +184,8 @@ h1 span {
 .corridor {
   padding: 1.5rem;
   margin-bottom: 5rem;
-  border: 1px solid rgba(255,59,59,.22);
-  background: linear-gradient(90deg, rgba(52,232,255,.05), rgba(255,59,59,.06));
+  border: 1px solid rgba(255,38,56,.28);
+  background: linear-gradient(90deg, rgba(0,229,255,.05), rgba(255,38,56,.06));
 }
 
 .corridor > p {
