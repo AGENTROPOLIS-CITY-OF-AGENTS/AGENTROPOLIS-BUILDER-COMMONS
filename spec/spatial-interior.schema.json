@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentropolis.dev/spec/builder-commons/spatial-interior.schema.json",
+  "title": "Builder Commons Spatial Interior Projection",
+  "type": "object",
+  "required": ["schema_version","project_ref","room_ref","label","nodes"],
+  "properties": {
+    "schema_version": { "type": "string", "const": "0.1" },
+    "project_ref": { "type": "string", "minLength": 1 },
+    "room_ref": { "type": "string", "minLength": 1 },
+    "label": { "type": "string", "minLength": 1, "maxLength": 160 },
+    "nodes": {
+      "type": "array",
+      "maxItems": 256,
+      "items": {
+        "type": "object",
+        "required": ["node_id","node_type","label","project_ref","room_ref","source_ref","status","position","accessibility_label","interaction_intents"],
+        "properties": {
+          "node_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+          "node_type": { "type": "string" },
+          "label": { "type": "string", "minLength": 1, "maxLength": 160 },
+          "project_ref": { "type": "string", "minLength": 1 },
+          "room_ref": { "type": "string", "minLength": 1 },
+          "source_ref": { "type": ["string","null"] },
+          "status": { "type": "string" },
+          "position": {
+            "type": "object",
+            "required": ["x","y","z"],
+            "properties": {
+              "x": { "type": "number" },
+              "y": { "type": "number" },
+              "z": { "type": "number" }
+            },
+            "additionalProperties": false
+          },
+          "accessibility_label": { "type": "string", "minLength": 1, "maxLength": 160 },
+          "interaction_intents": {
+            "type": "array",
+            "maxItems": 12,
+            "items": { "type": "string", "minLength": 1, "maxLength": 80 },
+            "uniqueItems": true
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}
