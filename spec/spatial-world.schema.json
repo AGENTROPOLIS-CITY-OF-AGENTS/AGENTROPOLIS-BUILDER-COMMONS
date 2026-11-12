@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentropolis.dev/spec/builder-commons/spatial-world.schema.json",
+  "title": "Builder Commons Spatial World",
+  "type": "object",
+  "required": ["schema_version","world_id","label","zones","markers","metadata"],
+  "properties": {
+    "schema_version": { "type": "string", "const": "0.1" },
+    "world_id": { "type": "string", "minLength": 1 },
+    "label": { "type": "string", "minLength": 1 },
+    "zones": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["zone_id","type","label","project_ref","room_ref","position","status"],
+        "properties": {
+          "zone_id": { "type": "string", "minLength": 1 },
+          "type": { "type": "string", "enum": ["atrium","project","forge","guild","agent-dock","compute-dock","broadcast","xr"] },
+          "label": { "type": "string", "minLength": 1 },
+          "project_ref": { "type": ["string","null"] },
+          "room_ref": { "type": ["string","null"] },
+          "position": {
+            "type": "object",
+            "required": ["x","y","z"],
+            "properties": {
+              "x": { "type": "number" },
+              "y": { "type": "number" },
+              "z": { "type": "number" }
+            },
+            "additionalProperties": false
+          },
+          "status": { "type": "string", "enum": ["idle","available","working","reviewing","blocked","offline"] }
+        },
+        "additionalProperties": false
+      }
+    },
+    "markers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["marker_id","participant_ref","zone_id","participant_type","display_name","status"],
+        "properties": {
+          "marker_id": { "type": "string", "minLength": 1 },
+          "participant_ref": { "type": "string", "minLength": 1 },
+          "zone_id": { "type": "string", "minLength": 1 },
+          "participant_type": { "type": "string", "enum": ["human","agent","service"] },
+          "display_name": { "type": "string", "minLength": 1 },
+          "status": { "type": "string", "enum": ["idle","available","working","reviewing","blocked","offline"] }
+        },
+        "additionalProperties": false
+      }
+    },
+    "metadata": { "type": "object", "additionalProperties": true }
+  },
+  "additionalProperties": false
+}
