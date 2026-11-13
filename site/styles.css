@@ -395,3 +395,218 @@ footer {
   .navigator .btn-ghost { flex: 1 1 100%; }
   .preview-strip { font-size: .62rem; letter-spacing: .12em; }
 }
+
+/* Full-width main so the stage is full-bleed with no vw units (vw would
+   overflow by the scrollbar width). Inner blocks keep the 1200px cap. */
+main { width: 100%; }
+.preview-strip,
+.navigator,
+.corridor {
+  width: min(1200px, calc(100% - 2rem));
+  margin-left: auto;
+  margin-right: auto;
+}
+.preview-strip { margin-top: 1.25rem; margin-bottom: 0; }
+.navigator { margin-top: 0; margin-bottom: 3rem; }
+.corridor { margin-top: 0; margin-bottom: 5rem; }
+
+/* Tap targets: the pre-existing navigator buttons measured 42px; bump
+   their padding so every button and link on the page is 44px or taller. */
+.intent-btn { padding: 0.8rem 1rem; }
+.navigator .btn { padding: 0.8rem 1rem; }
+.navigator .btn-big { padding: 0.9rem 1.15rem; }
+
+/* ============ HERO STAGE · HERMES CITY civic-shell pattern ============
+   The 3D build world fills the stage. Hero copy sits at the top and
+   the capability cards sit at the bottom, both in normal flow, so the
+   title can never overlap the cards or the counts line at any width.
+   Cards are CSS-only (no <img>), so no broken-image icon can appear. */
+.stage {
+  width: 100%;
+  margin-bottom: 3rem;
+}
+
+.scene {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: clamp(620px, calc(100dvh - 57px), 840px);
+  min-height: 620px;
+  overflow: hidden;
+  background: #04070c;
+  border-top: 1px solid var(--ag-border);
+  border-bottom: 1px solid var(--ag-border);
+}
+
+#gl { position: absolute; inset: 0; z-index: 1; }
+#gl canvas { display: block; width: 100%; height: 100%; touch-action: none; cursor: grab; }
+#gl canvas:active { cursor: grabbing; }
+body[data-gl="off"] #gl { display: none; }
+body[data-gl="off"] .scene {
+  background:
+    radial-gradient(1100px 500px at 78% -10%, rgba(0, 229, 255, 0.07), transparent 60%),
+    radial-gradient(800px 420px at 8% 110%, rgba(255, 38, 56, 0.06), transparent 60%),
+    #080B10;
+}
+
+.gl-vignette {
+  position: absolute; inset: 0; z-index: 2; pointer-events: none;
+  background:
+    linear-gradient(180deg, rgba(4, 7, 12, 0.55) 0%, transparent 18%),
+    linear-gradient(0deg, rgba(4, 7, 12, 0.62) 0%, transparent 26%),
+    radial-gradient(120% 90% at 50% 42%, transparent 62%, rgba(3, 5, 9, 0.5) 100%);
+}
+
+.gl-error {
+  position: static;
+  z-index: 9;
+  max-width: min(560px, calc(100% - 32px));
+  margin: 24px auto;
+  border: 1px solid var(--ag-red); border-radius: 6px; padding: 9px 13px;
+  background: rgba(28, 10, 13, 0.92); color: #FFC2C8; font-size: 13.5px; line-height: 1.5; text-align: center;
+}
+.gl-error[hidden] { display: none; }
+
+.hero-copy {
+  position: relative; z-index: 3;
+  text-align: center;
+  padding: 30px 16px 0;
+  pointer-events: none;
+}
+.hero-copy .eyebrow {
+  margin: 0 0 8px;
+  text-shadow: 0 1px 10px rgba(0, 0, 0, 0.8);
+}
+.hero-copy h1 {
+  margin: 0;
+  max-width: none;
+  font-size: clamp(3rem, 8vw, 6rem);
+  line-height: 0.95;
+  letter-spacing: 0.02em;
+  text-shadow: 0 2px 22px rgba(0, 0, 0, 0.85), 0 0 42px rgba(0, 229, 255, 0.25);
+}
+.hero-copy .lead {
+  margin: 1rem 0 0.25rem;
+  text-shadow: 0 1px 12px rgba(0, 0, 0, 0.9);
+}
+.hero-copy .sublead {
+  margin: 0;
+  text-shadow: 0 1px 12px rgba(0, 0, 0, 0.9);
+}
+.hero-copy .actions { justify-content: center; pointer-events: auto; }
+.hero-copy .actions a {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.counts {
+  display: inline-block;
+  margin: 18px 0 0;
+  padding: 7px 14px;
+  background: rgba(4, 6, 9, 0.72);
+  border: 1px solid rgba(0, 229, 255, 0.22);
+  border-radius: 999px;
+  font-family: var(--ag-font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.2em;
+  color: var(--ag-cyan);
+  text-shadow: 0 1px 10px rgba(0, 0, 0, 0.85);
+}
+
+.stage-spacer {
+  flex: 1 1 auto;
+  min-height: 120px;
+  position: relative;
+  z-index: 2;
+}
+
+.look-hint {
+  position: absolute; top: 14px; right: 16px; z-index: 4;
+  font-family: var(--ag-font-mono); font-size: 10px; letter-spacing: 0.18em;
+  color: var(--ag-text-muted);
+  border: 1px solid var(--ag-border); border-radius: 999px; padding: 6px 12px;
+  background: rgba(4, 6, 9, 0.75);
+}
+
+/* Capability cards overlaid on the scene (CSS-only, no images). */
+.scene .rail {
+  position: relative; z-index: 3;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin: 0 24px 24px;
+  border: 0;
+  background: transparent;
+}
+.scene .rail article {
+  min-height: 168px;
+  padding: 1rem 1.1rem 1.1rem;
+  background: rgba(4, 6, 9, 0.88);
+  border: 1px solid rgba(0, 229, 255, 0.22);
+  border-radius: 10px;
+  backdrop-filter: blur(3px);
+}
+.scene .rail article:hover {
+  border-color: var(--ag-cyan);
+  box-shadow: 0 0 16px rgba(0, 229, 255, 0.3);
+}
+.scene .rail h2 { margin: 0.6rem 0 0.5rem; font-size: 0.95rem; }
+.scene .rail p { font-size: 0.92rem; }
+
+/* CSS-only card marks (no images): four squares, two dots, plus, bar. */
+.card-mark {
+  display: block;
+  width: 34px;
+  height: 34px;
+  margin-bottom: 0.7rem;
+  border: 1px solid rgba(0, 229, 255, 0.4);
+  border-radius: 6px;
+  background-repeat: no-repeat;
+}
+.mark-rooms {
+  background-image:
+    linear-gradient(#00E5FF, #00E5FF),
+    linear-gradient(#FF2638, #FF2638),
+    linear-gradient(#00E5FF, #00E5FF),
+    linear-gradient(#39FF7A, #39FF7A);
+  background-size: 11px 11px;
+  background-position: 6px 6px, 17px 6px, 6px 17px, 17px 17px;
+}
+.mark-crew {
+  background-image:
+    radial-gradient(circle 5px at 12px 17px, #00E5FF 98%, transparent),
+    radial-gradient(circle 5px at 23px 17px, #FF2638 98%, transparent);
+}
+.mark-byoe {
+  background-image:
+    linear-gradient(#00E5FF, #00E5FF),
+    linear-gradient(#00E5FF, #00E5FF);
+  background-size: 20px 4px, 4px 20px;
+  background-position: center;
+}
+.mark-bridge {
+  background-image:
+    linear-gradient(#FF2638, #FF2638),
+    linear-gradient(#FF2638, #FF2638);
+  background-size: 20px 4px, 8px 8px;
+  background-position: left center, right center;
+}
+
+/* ============ HERO STAGE · MOBILE (<=900px) ============
+   Lead and sublead hide (civic-shell pattern); the title, actions and
+   counts stay, the 3D band keeps a 320px spacer, and the cards stack
+   below the scene in flow. No overlap, no clipping, no overflow. */
+@media (max-width: 900px) {
+  .scene { height: auto; min-height: 0; }
+  .hero-copy { padding-top: 26px; }
+  .hero-copy h1 { font-size: clamp(2.6rem, 13vw, 3.4rem); }
+  .hero-copy .lead,
+  .hero-copy .sublead { display: none; }
+  .hero-copy .actions a { width: 100%; }
+  .counts { font-size: 0.62rem; letter-spacing: 0.12em; }
+  .stage-spacer { min-height: 320px; }
+  .look-hint { display: none; }
+  .scene .rail { grid-template-columns: 1fr; margin: 0 12px 12px; gap: 10px; }
+  .scene .rail article { min-height: 0; padding: 0.9rem 1rem; }
+}

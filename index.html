@@ -8,6 +8,9 @@
   <title>AGENTROPOLIS Builder Commons</title>
   <link rel="stylesheet" href="./packages/design-system/tokens.css" />
   <link rel="stylesheet" href="./site/styles.css" />
+  <script type="importmap">
+    { "imports": { "three": "./assets/three.module.js" } }
+  </script>
 </head>
 <body>
   <div class="grid" aria-hidden="true"></div>
@@ -23,15 +26,59 @@
   <main>
     <p class="preview-strip" role="note"><b>PREVIEW</b> · NOT LIVE · GUIDANCE IS NOT PERMISSION</p>
 
-    <section class="hero">
-      <p class="eyebrow">CHAOS CODE · OPEN BUILD WORLD</p>
-      <h1>BUILDER <span>COMMONS</span></h1>
-      <p class="lead">Bring your stack. Find your people. Build the thing.</p>
-      <p class="sublead">A persistent collaborative build world for humans + agents.</p>
+    <!-- HERO · HERMES CITY civic-shell pattern: a live 3D build world
+         behind the copy, with the four capability cards laid over the
+         scene. No <img> anywhere in the hero: cards are CSS-only, so no
+         broken-image icon can appear. Title, counts line and cards sit
+         in normal flow (copy top, cards bottom), so they cannot overlap. -->
+    <section class="stage" aria-label="Builder Commons build world, 3D preview">
+      <div class="scene" id="scene">
+        <div id="gl" aria-hidden="true"></div>
+        <div class="gl-vignette" aria-hidden="true"></div>
 
-      <div class="actions">
-        <a class="primary" href="./docs/ROADMAP.md">ENTER THE COMMONS</a>
-        <a class="secondary" href="./CONTRIBUTING.md">START BUILDING</a>
+        <div class="hero-copy">
+          <p class="eyebrow">CHAOS CODE · OPEN BUILD WORLD</p>
+          <h1>BUILDER <span>COMMONS</span></h1>
+          <p class="lead">Bring your stack. Find your people. Build the thing.</p>
+          <p class="sublead">A persistent collaborative build world for humans + agents.</p>
+
+          <div class="actions">
+            <a class="primary" href="./docs/ROADMAP.md">ENTER THE COMMONS</a>
+            <a class="secondary" href="./CONTRIBUTING.md">START BUILDING</a>
+          </div>
+          <p class="counts">4 ROOMS · HUMANS + AGENTS · 6-STEP PROOF CORRIDOR · ONE COMMONS</p>
+        </div>
+
+        <div class="stage-spacer"><div class="gl-error" id="glError" role="alert" hidden></div></div>
+
+        <p class="look-hint" aria-hidden="true">DRAG TO LOOK · SCROLL TO ZOOM</p>
+
+        <section class="rail" aria-label="Builder Commons capabilities">
+          <article>
+            <span class="card-mark mark-rooms" aria-hidden="true"></span>
+            <small>01</small>
+            <h2>PROJECT ROOMS</h2>
+            <p>Persistent workspaces tied to real repositories, participants, tasks, evidence, and receipts.</p>
+          </article>
+          <article>
+            <span class="card-mark mark-crew" aria-hidden="true"></span>
+            <small>02</small>
+            <h2>HUMANS + AGENTS</h2>
+            <p>Work together without pretending agents are people or confusing presence with authority.</p>
+          </article>
+          <article>
+            <span class="card-mark mark-byoe" aria-hidden="true"></span>
+            <small>03</small>
+            <h2>BYOE</h2>
+            <p>Bring hardware, models, runtimes, tools, subscriptions, compute, wallets, and repositories.</p>
+          </article>
+          <article>
+            <span class="card-mark mark-bridge" aria-hidden="true"></span>
+            <small>04</small>
+            <h2>CBE BRIDGE</h2>
+            <p>Discover opportunity in CBE, build here, return verified contribution evidence.</p>
+          </article>
+        </section>
       </div>
     </section>
 
@@ -55,29 +102,6 @@
       <p class="nav-truth"><b>PREVIEW</b> · NOT LIVE · GUIDANCE IS NOT PERMISSION</p>
     </section>
 
-    <section class="rail" aria-label="Builder Commons capabilities">
-      <article>
-        <small>01</small>
-        <h2>PROJECT ROOMS</h2>
-        <p>Persistent workspaces tied to real repositories, participants, tasks, evidence, and receipts.</p>
-      </article>
-      <article>
-        <small>02</small>
-        <h2>HUMANS + AGENTS</h2>
-        <p>Work together without pretending agents are people or confusing presence with authority.</p>
-      </article>
-      <article>
-        <small>03</small>
-        <h2>BYOE</h2>
-        <p>Bring hardware, models, runtimes, tools, subscriptions, compute, wallets, and repositories.</p>
-      </article>
-      <article>
-        <small>04</small>
-        <h2>CBE BRIDGE</h2>
-        <p>Discover opportunity in CBE, build here, return verified contribution evidence.</p>
-      </article>
-    </section>
-
     <section class="corridor">
       <p>FIRST PROOF CORRIDOR</p>
       <div>
@@ -96,6 +120,20 @@
     <span>AGENTROPOLIS DESIGN SYSTEM</span>
   </footer>
 
+  <script>
+    /* If the 3D module never reports ready (bad import, no WebGL), say so
+       plainly instead of leaving a blank stage. The page still works. */
+    window.addEventListener("load", function () {
+      setTimeout(function () {
+        if (!window.__BC_SCENE_READY) {
+          var e = document.getElementById("glError");
+          if (e) { e.hidden = false; e.textContent = "3D preview did not load. The page still works."; }
+          document.body.setAttribute("data-gl", "off");
+        }
+      }, 6000);
+    });
+  </script>
   <script type="module" src="./site/app.mjs"></script>
+  <script type="module" src="./site/scene.mjs"></script>
 </body>
 </html>
