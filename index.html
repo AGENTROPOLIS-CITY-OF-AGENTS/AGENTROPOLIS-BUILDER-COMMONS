@@ -1,101 +1,193 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-stage="see-it" data-view="street" data-mode="hybrid">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="theme-color" content="#040608" />
-  <meta name="description" content="AGENTROPOLIS Builder Commons — a persistent collaborative build world for humans and agents." />
-  <title>AGENTROPOLIS Builder Commons</title>
-  <link rel="stylesheet" href="./packages/design-system/tokens.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="color-scheme" content="dark" />
+  <meta name="theme-color" content="#080B10" />
+  <meta name="description" content="AGENTROPOLIS Builder Commons. A persistent collaborative build world for humans and agents. Main Street pattern: a lit 3D build street, four rooms, one commons." />
+  <title>AGENTROPOLIS · Builder Commons</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="./site/styles.css" />
+  <script type="importmap">
+    { "imports": { "three": "./assets/three.module.js" } }
+  </script>
 </head>
-<body>
-  <div class="grid" aria-hidden="true"></div>
+<body data-gl="on">
+  <div class="app" id="app">
 
-  <header class="topbar">
-    <div class="brand">
-      <span class="brand-mark">A</span>
-      <span>AGENTROPOLIS</span>
-    </div>
-    <span class="status"><i></i> BUILDER COMMONS · v0.1 · PREVIEW — NOT LIVE</span>
-  </header>
-
-  <main>
-    <p class="preview-strip" role="note"><b>PREVIEW</b> · NOT LIVE · GUIDANCE IS NOT PERMISSION</p>
-
-    <section class="hero">
-      <p class="eyebrow">CHAOS CODE · OPEN BUILD WORLD</p>
-      <h1>BUILDER <span>COMMONS</span></h1>
-      <p class="lead">Bring your stack. Find your people. Build the thing.</p>
-      <p class="sublead">A persistent collaborative build world for humans + agents.</p>
-
-      <div class="actions">
-        <a class="primary" href="./docs/ROADMAP.md">ENTER THE COMMONS</a>
-        <a class="secondary" href="./CONTRIBUTING.md">START BUILDING</a>
+    <!-- ======= TOP BAR · Main Street pattern ======= -->
+    <header class="topbar">
+      <button class="back-btn" id="backBtn" type="button" aria-label="Back to city level">
+        <span class="chev" aria-hidden="true">&#8249;</span><span id="backLabel">CITY</span>
+      </button>
+      <div class="brand">
+        <h1>AGENTROPOLIS <span class="bc">BUILDER COMMONS</span></h1>
+        <p>BUILDER COMMONS &#183; v0.1 <span class="dot">&#183;</span> PREVIEW &mdash; NOT LIVE <span class="opt"><span class="dot">&#183;</span> GUIDE ON DUTY</span></p>
       </div>
-    </section>
-
-    <section class="navigator" aria-labelledby="navTitle">
-      <div class="nav-head">
-        <h2 id="navTitle">NAVIGATOR <span>· GUIDE</span></h2>
-        <span class="guide-chip"><span class="g-dot" aria-hidden="true"></span>NAVIGATOR</span>
+      <div class="topbar-spacer"></div>
+      <div class="mode-switch" role="group" aria-label="Commons mode">
+        <button type="button" data-mode-btn="web2" aria-pressed="false">WEB2</button>
+        <button type="button" data-mode-btn="hybrid" aria-pressed="true">HYBRID</button>
+        <button type="button" data-mode-btn="web3" aria-pressed="false">WEB3</button>
       </div>
-      <p class="nav-step">FIRST · TELL ME WHAT YOU CAME FOR</p>
-      <p class="nav-msg" id="navMsg" aria-live="polite">Pick what you came to build.</p>
-      <p class="nav-sub">NO ACCOUNT. NO KEYS. JUST PICK ONE.</p>
-      <div class="intent-row" role="group" aria-label="What do you want to do">
-        <button class="intent-btn" type="button" data-intent="room" data-target="./docs/ROADMAP.md" data-action="First, pick a room" data-message="Pick a room first — the roadmap shows the rooms planned." aria-pressed="false">Pick a room</button>
-        <button class="intent-btn" type="button" data-intent="build" data-target="./CONTRIBUTING.md" data-action="Start building" data-message="Start building — the contributing guide is the first step." aria-pressed="false">Start building</button>
-        <button class="intent-btn" type="button" data-intent="roadmap" data-target="./docs/ROADMAP.md" data-action="View the roadmap" data-message="View the roadmap — see what is planned and what is next." aria-pressed="false">View the roadmap</button>
+      <div class="step-ring" aria-hidden="true">
+        <svg width="40" height="40" viewBox="0 0 40 40">
+          <circle class="ring-bg" cx="20" cy="20" r="16.5" fill="none" stroke-width="3"/>
+          <circle class="ring-fg" id="ringFg" cx="20" cy="20" r="16.5" fill="none" stroke-width="3"
+            stroke-linecap="round" transform="rotate(-90 20 20)"
+            stroke-dasharray="103.7" stroke-dashoffset="82.9"/>
+        </svg>
+        <div class="step-meta"><b id="ringStep">STEP 1 / 5</b><span id="ringLabel">SEE IT</span></div>
       </div>
-      <div class="nav-onestep">
-        <a class="btn btn-primary btn-big" id="takeBtn" href="./docs/ROADMAP.md">First, pick a room</a>
-        <a class="btn btn-ghost" href="./CONTRIBUTING.md">Start building</a>
+    </header>
+
+    <!-- ======= STAGE ======= -->
+    <main class="stage" id="stage">
+      <div class="scene" id="scene" aria-label="Builder Commons, the lit 3D build street">
+        <div id="gl" aria-hidden="true"></div>
+        <div class="gl-vignette" aria-hidden="true"></div>
+
+        <div class="hero-copy" id="heroCopy">
+          <p class="h-kicker">CHAOS CODE &#183; OPEN BUILD WORLD</p>
+          <h2>This is <span class="cy">Builder Commons</span></h2>
+          <p>Bring your stack. Find your people. Build the thing. A persistent collaborative build world for humans + agents.</p>
+          <div class="hero-actions">
+            <a class="btn btn-primary" href="./docs/ROADMAP.md">Enter the Commons</a>
+            <a class="btn btn-ghost" href="./CONTRIBUTING.md">Start building</a>
+          </div>
+          <p class="counts-line"><b>4 ROOMS</b> &#183; HUMANS + AGENTS &#183; 6-STEP PROOF CORRIDOR &#183; ONE COMMONS</p>
+        </div>
+
+        <div id="nodeLayer"></div>
+        <div class="district-flag" aria-hidden="true">TOWER 11 &#183; HERMES CITY<br/><b>4 ROOMS &#183; ONE COMMONS</b></div>
+        <div class="compass" aria-hidden="true"><b>N &#8593;</b> CITY CORE<br/>CBE BRIDGE &#8599; FAR END</div>
+        <div class="look-hint" aria-hidden="true">DRAG TO LOOK AROUND &#183; SCROLL TO ZOOM</div>
+        <div class="gl-error" id="glError" role="alert" hidden></div>
       </div>
-      <p class="nav-truth"><b>PREVIEW</b> · NOT LIVE · GUIDANCE IS NOT PERMISSION</p>
-    </section>
 
-    <section class="rail" aria-label="Builder Commons capabilities">
-      <article>
-        <small>01</small>
-        <h2>PROJECT ROOMS</h2>
-        <p>Persistent workspaces tied to real repositories, participants, tasks, evidence, and receipts.</p>
-      </article>
-      <article>
-        <small>02</small>
-        <h2>HUMANS + AGENTS</h2>
-        <p>Work together without pretending agents are people or confusing presence with authority.</p>
-      </article>
-      <article>
-        <small>03</small>
-        <h2>BYOE</h2>
-        <p>Bring hardware, models, runtimes, tools, subscriptions, compute, wallets, and repositories.</p>
-      </article>
-      <article>
-        <small>04</small>
-        <h2>CBE BRIDGE</h2>
-        <p>Discover opportunity in CBE, build here, return verified contribution evidence.</p>
-      </article>
-    </section>
+      <!-- ======= NAVIGATOR ======= -->
+      <section class="navigator" aria-labelledby="navTitle">
+        <div class="nav-head">
+          <h2 id="navTitle">NAVIGATOR <span>&#183; GUIDE</span></h2>
+          <button class="guide-chip" id="guideChip" type="button" aria-label="Navigator guide identity">
+            <span class="g-dot" aria-hidden="true"></span>NAVIGATOR
+          </button>
+        </div>
+        <p class="nav-step" id="navStep">STEP 1 OF 3 &#183; TELL ME WHAT YOU CAME FOR</p>
+        <p class="nav-msg" id="navMsg" aria-live="polite">Pick what you came to build.</p>
+        <p class="nav-sub" id="navSub">NO ACCOUNT. NO KEYS. JUST PICK ONE.</p>
+        <div class="intent-row" role="group" aria-label="What do you want to do">
+          <button class="intent-btn" type="button" data-intent="room" data-target="./docs/ROADMAP.md" data-action="First, pick a room" data-message="Pick a room first, the roadmap shows the rooms planned." aria-pressed="false">Pick a room</button>
+          <button class="intent-btn" type="button" data-intent="build" data-target="./CONTRIBUTING.md" data-action="Start building" data-message="Start building, the contributing guide is the first step." aria-pressed="false">Start building</button>
+          <button class="intent-btn" type="button" data-intent="roadmap" data-target="./docs/ROADMAP.md" data-action="View the roadmap" data-message="View the roadmap, see what is planned and what is next." aria-pressed="false">View the roadmap</button>
+        </div>
+        <div class="nav-onestep">
+          <a class="btn btn-primary btn-big" id="takeBtn" href="./docs/ROADMAP.md">First, pick a room</a>
+          <button class="btn btn-ghost" id="explainBtn" type="button">Tell me more</button>
+        </div>
+        <p class="nav-truth"><b>PREVIEW</b> &#183; NOT LIVE &#183; GUIDANCE IS NOT PERMISSION</p>
+        <button class="nav-more-btn" id="moreBtn" type="button" aria-expanded="false" aria-controls="morePanel">MORE WAYS TO LOOK AT IT <span aria-hidden="true">&#9662;</span></button>
+        <div class="nav-more" id="morePanel" hidden>
+          <div class="build-notes">
+            <p class="notes-title">BUILD NOTES &#183; FUNCTIONAL VS PREVIEW</p>
+            <div class="notes-body">
+              <b>Functional in this build:</b> the live 3D lit build street (drag to look, scroll to zoom), stop selection, intent filtering, mode framing (Web2 / Hybrid / Web3), guided Look Around tour, the Check It step, and local session receipts.<br/>
+              <span class="pv"><b style="color:#FF8A94">Preview only:</b></span> project rooms, live collaboration, CBE matching, and compute executors. No live rooms, jobs, or balances run on this floor. Receipts are local session records, stored nowhere.
+            </div>
+          </div>
+          <div class="corridor-note">
+            <p class="notes-title">FIRST PROOF CORRIDOR</p>
+            <p class="corridor-steps">CONNECT &#8594; IMPORT &#8594; ROOM &#8594; COLLABORATE &#8594; VERIFY &#8594; RECEIPT</p>
+          </div>
+        </div>
+      </section>
 
-    <section class="corridor">
-      <p>FIRST PROOF CORRIDOR</p>
-      <div>
-        <span>CONNECT</span><b>→</b>
-        <span>IMPORT</span><b>→</b>
-        <span>ROOM</span><b>→</b>
-        <span>COLLABORATE</span><b>→</b>
-        <span>VERIFY</span><b>→</b>
-        <span>RECEIPT</span>
-      </div>
-    </section>
-  </main>
+      <!-- ======= DETAIL PANEL ======= -->
+      <aside class="detail" id="detailPanel" hidden aria-labelledby="detailName">
+        <p class="d-kicker" id="detailKicker">NOW ENTERING</p>
+        <h3 id="detailName">Project Rooms</h3>
+        <p class="d-tag" id="detailTag"></p>
+        <p id="detailDesc"></p>
+        <h4>WHAT YOU CAN DO HERE &#183; <span id="detailModeLabel">HYBRID</span> FRAMING</h4>
+        <ul class="svc-list" id="detailServices"></ul>
+        <h4>WHAT <span id="detailModeLabel2">HYBRID</span> MODE CHANGES HERE</h4>
+        <p class="mode-note" id="detailModeNote"></p>
+        <div class="detail-actions">
+          <button class="btn btn-primary" id="checkBtn" type="button">Check it</button>
+          <button class="btn btn-ghost" id="returnBtn" type="button">Back to street</button>
+        </div>
+        <div class="receipt" id="receiptBox" aria-live="polite"></div>
+      </aside>
 
-  <footer>
-    <span>BUILD DIFFERENT. TOGETHER.</span>
-    <span>AGENTROPOLIS DESIGN SYSTEM</span>
-  </footer>
+      <!-- ======= WIDER CITY ======= -->
+      <section class="wider" id="widerView" aria-labelledby="widerTitle">
+        <div class="wider-inner">
+          <h3 id="widerTitle">AGENTROPOLIS <span>&#183; THE WIDER CITY</span></h3>
+          <p class="w-sub">YOU ARE AT CITY LEVEL. BUILDER COMMONS IS OPEN. THE REST OF THE CITY IS SHOWN AS PREVIEWS IN THIS BUILD.</p>
+          <div class="zone-grid">
+            <button class="zone is-here" id="zoneCommons" type="button">
+              <span class="z-state">YOU ARE HERE &#183; OPEN</span>
+              <h4>Builder Commons</h4>
+              <p>The working build world. Four rooms, one commons, guided by the Navigator. Return to the street.</p>
+            </button>
+            <div class="zone is-preview">
+              <span class="z-state">PREVIEW &#183; NOT IN THIS BUILD</span>
+              <h4>Main Street</h4>
+              <p>The working public corridor. Commerce, work, creation, learning, and services. Marker only in this build.</p>
+            </div>
+            <div class="zone is-preview">
+              <span class="z-state">PREVIEW &#183; NOT IN THIS BUILD</span>
+              <h4>Hermes City</h4>
+              <p>The civic shell around the Commons. Tower 11 stands here. Marker only in this build.</p>
+            </div>
+            <div class="zone is-preview">
+              <span class="z-state">PREVIEW &#183; NOT IN THIS BUILD</span>
+              <h4>Chaos Mall</h4>
+              <p>Shops and chaos commerce at the city edge. Marker only in this build.</p>
+            </div>
+            <div class="zone is-preview">
+              <span class="z-state">PREVIEW &#183; NOT IN THIS BUILD</span>
+              <h4>Gaming District</h4>
+              <p>Games, heists, and play at the city edge. Marker only in this build.</p>
+            </div>
+          </div>
+          <p class="w-foot">TRANSITION IS FUNCTIONAL INSIDE THIS EXPERIENCE. THE DISTRICTS THEMSELVES ARE PREVIEWS. WHEN A DISTRICT OPENS, IT WILL OPEN FROM HERE, ONE STREET AT A TIME.</p>
+        </div>
+      </section>
+    </main>
 
+    <!-- ======= BOTTOM BAR ======= -->
+    <footer class="bottombar">
+      <button class="sys-btn" id="lookBtn" type="button" aria-pressed="false">LOOK AROUND</button>
+      <button class="sys-btn sys-btn-city" id="cityBtn" type="button">ENTER THE WIDER CITY</button>
+      <nav class="journey" id="journey" aria-label="Journey progress">
+        <span class="j-step now" data-jstep="1">SEE IT</span><span class="j-step" aria-hidden="true">&#183;</span>
+        <span class="j-step" data-jstep="2">CHOOSE</span><span class="j-step" aria-hidden="true">&#183;</span>
+        <span class="j-step" data-jstep="3">DO IT</span><span class="j-step" aria-hidden="true">&#183;</span>
+        <span class="j-step" data-jstep="4">CHECK IT</span><span class="j-step" aria-hidden="true">&#183;</span>
+        <span class="j-step" data-jstep="5">RECEIPT</span>
+      </nav>
+    </footer>
+  </div>
+  <p class="sr-only" id="liveRegion" aria-live="polite"></p>
+
+  <script>
+    /* If the 3D module never reports ready (bad import, no WebGL), say so
+       plainly instead of leaving a blank stage. The page still works. */
+    window.addEventListener("load", function () {
+      setTimeout(function () {
+        if (!window.__BC_SCENE_READY) {
+          var e = document.getElementById("glError");
+          if (e) { e.hidden = false; e.textContent = "3D preview did not load. The page still works."; }
+          document.body.setAttribute("data-gl", "off");
+        }
+      }, 6000);
+    });
+  </script>
   <script type="module" src="./site/app.mjs"></script>
+  <script type="module" src="./site/scene.mjs"></script>
 </body>
 </html>
