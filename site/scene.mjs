@@ -1,12 +1,14 @@
 /* ================================================================
-   BUILDER COMMONS 3D · procedural construction city
-   HERMES CITY civic-shell pattern, build-world subject: towers
-   rising, cranes, scaffolding, plaza. Obsidian dominant; cyan and
-   red accents; neon green only on the one tallest-tower beacon.
-   Detailed forms (cylinder plinths, set-back volumes, emissive
-   window facades, open-frame unfinished tops), never bare boxes.
-   No external assets: Three.js is vendored at ./assets/three.module.js.
-   If WebGL fails, the page keeps working and a note is shown.
+   BUILDER COMMONS 3D · lit night build street
+   Main Street pattern: a real 3D street runs through the build
+   world, with four room towers as stops. The street is LIT:
+   lamps, glowing windows, a lit road, and strong ambient plus
+   fill light, so the scene reads clearly on a phone. Night city
+   feel is kept, the ground stays obsidian, nothing is washed
+   out to white. Four locked colors only: obsidian, cyan, red,
+   neon green. No external assets: Three.js is vendored at
+   ./assets/three.module.js. If WebGL fails, the page keeps
+   working and a note is shown.
    ================================================================ */
 import * as THREE from "three";
 
@@ -40,12 +42,12 @@ import * as THREE from "three";
       return ((t ^ t >>> 14) >>> 0) / 4294967296;
     };
   }
-  var rand = mulberry32(20261113);
+  var rand = mulberry32(20261114);
 
   /* ---------- renderer / scene / camera ---------- */
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.25));
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.15;
+  renderer.toneMappingExposure = 1.35;
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFShadowMap;
   container.appendChild(renderer.domElement);
@@ -64,13 +66,17 @@ import * as THREE from "three";
   }
 
   var scene = new THREE.Scene();
-  scene.background = new THREE.Color(0x04070c);
-  scene.fog = new THREE.FogExp2(0x060a10, 0.0032);
+  scene.background = new THREE.Color(0x0a1218);
+  scene.fog = new THREE.FogExp2(0x0a141c, 0.0020);
 
   var camera = new THREE.PerspectiveCamera(55, 1.6, 0.5, 900);
 
-  /* Orbit state: slow idle sway plus pointer drag and wheel zoom. */
-  var orbit = { az: 0.45, polar: 0.98, radius: 98, target: new THREE.Vector3(0, 8, 0) };
+  /* Orbit state: slow idle sway plus pointer drag and wheel zoom.
+     Pulled back from the first pass so the towers sit lower in the
+     frame and their labels clear the hero copy. */
+  var orbit = { az: 0.45, polar: 1.02, radius: 108, target: new THREE.Vector3(0, 8, 0) };
+  var orbitHome = { az: 0.45, polar: 1.02, radius: 108, target: new THREE.Vector3(0, 8, 0) };
+  var flyTo = null;
   function applyCamera() {
     var sp = Math.sin(orbit.polar), cp = Math.cos(orbit.polar);
     camera.position.set(
@@ -82,30 +88,37 @@ import * as THREE from "three";
   }
   applyCamera();
 
-  /* ---------- sky dome ---------- */
+  /* ---------- sky dome: brighter horizon so the night reads lit ---------- */
   var sky = new THREE.Mesh(
     new THREE.SphereGeometry(430, 24, 16),
     new THREE.ShaderMaterial({
       side: THREE.BackSide, depthWrite: false, fog: false,
       uniforms: {
-        top: { value: new THREE.Color(0x020409) },
-        mid: { value: new THREE.Color(0x06131c) },
-        bot: { value: new THREE.Color(0x05070b) }
+        top: { value: new THREE.Color(0x04080e) },
+        mid: { value: new THREE.Color(0x0d2436) },
+        bot: { value: new THREE.Color(0x0a1218) }
       },
       vertexShader: "varying vec3 vP; void main(){ vP = position; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }",
       fragmentShader: "varying vec3 vP; uniform vec3 top; uniform vec3 mid; uniform vec3 bot;" +
         "void main(){ vec3 n = normalize(vP); float h = n.y;" +
         " vec3 c = h > 0.12 ? mix(mid, top, smoothstep(0.12, 0.7, h)) : mix(bot, mid, smoothstep(-0.08, 0.12, h));" +
-        " float g = pow(max(dot(normalize(vec3(n.x, 0.0, n.z)), vec3(0.0, 0.0, -1.0)), 0.0), 2.0) * exp(-abs(h) * 5.0);" +
-        " c += vec3(0.0, 0.10, 0.13) * g;" +
+        " float g = pow(max(dot(normalize(vec3(n.x, 0.0, n.z)), vec3(0.0, 0.0, -1.0)), 0.0), 2.0) * exp(-abs(h) * 4.0);" +
+        " c += vec3(0.0, 0.22, 0.28) * g;" +
         " gl_FragColor = vec4(c, 1.0); }"
     })
   );
   scene.add(sky);
 
-  /* ---------- lights ---------- */
-  scene.add(new THREE.HemisphereLight(0x8fd8ff, 0x0a0c10, 0.55));
-  var key = new THREE.DirectionalLight(0xbfe2ff, 1.25);
+  /* ---------- LIGHTS: the lit street ----------
+     Hemisphere is the base wash (bright sky bounce, lighter ground
+     bounce so undersides are not black). Ambient lifts the floor.
+     Key is a strong cool moon light. Red rim and cyan fill keep the
+     four-color read. Four lamp point lights pool light on the road. */
+  var hemi = new THREE.HemisphereLight(0x9fd4ff, 0x2a3138, 1.25);
+  scene.add(hemi);
+  var amb = new THREE.AmbientLight(0x2c3a48, 0.65);
+  scene.add(amb);
+  var key = new THREE.DirectionalLight(0xcfe6ff, 2.2);
   key.position.set(55, 78, 18);
   key.castShadow = true;
   key.shadow.mapSize.set(1024, 1024);
@@ -115,42 +128,81 @@ import * as THREE from "three";
   key.shadow.bias = -0.0006;
   key.target.position.set(0, 0, 0);
   scene.add(key); scene.add(key.target);
-  var rim = new THREE.DirectionalLight(0xff2638, 0.5);
+  var rim = new THREE.DirectionalLight(0xff2638, 0.7);
   rim.position.set(-50, 26, -95);
   scene.add(rim);
-  var fill = new THREE.DirectionalLight(0x00e5ff, 0.35);
+  var fill = new THREE.DirectionalLight(0x00e5ff, 0.6);
   fill.position.set(-38, 18, 55);
   scene.add(fill);
+  var lampLights = [];
+  function lampLight(x, y, z) {
+    var p = new THREE.PointLight(0x9fd4ff, 26, 48, 1.8);
+    p.position.set(x, y, z);
+    scene.add(p);
+    lampLights.push(p);
+    return p;
+  }
 
   /* ---------- materials ---------- */
   var CYAN = 0x00e5ff, RED = 0xff2638, GREEN = 0x39ff7a;
-  var matObsidian = new THREE.MeshStandardMaterial({ color: 0x0b0e13, roughness: 0.85, metalness: 0.15 });
-  var matObsidian2 = new THREE.MeshStandardMaterial({ color: 0x0d1219, roughness: 0.9, metalness: 0.1 });
-  var matPlinth = new THREE.MeshStandardMaterial({ color: 0x11161d, roughness: 0.8, metalness: 0.2 });
-  var matSteel = new THREE.MeshStandardMaterial({ color: 0x1a222b, roughness: 0.55, metalness: 0.6 });
-  var matScaffold = new THREE.MeshStandardMaterial({ color: 0x0e2a30, roughness: 0.6, metalness: 0.5 });
-  var matCyanGlow = new THREE.MeshStandardMaterial({ color: 0x062a30, emissive: CYAN, emissiveIntensity: 1.4, roughness: 0.4 });
-  var matRedGlow = new THREE.MeshStandardMaterial({ color: 0x2a060a, emissive: RED, emissiveIntensity: 1.4, roughness: 0.4 });
-  var matGreenGlow = new THREE.MeshStandardMaterial({ color: 0x062a10, emissive: GREEN, emissiveIntensity: 1.6, roughness: 0.4 });
+  var matObsidian = new THREE.MeshStandardMaterial({ color: 0x11161d, roughness: 0.8, metalness: 0.15 });
+  var matObsidian2 = new THREE.MeshStandardMaterial({ color: 0x141b24, roughness: 0.85, metalness: 0.1 });
+  var matPlinth = new THREE.MeshStandardMaterial({ color: 0x182028, roughness: 0.75, metalness: 0.2 });
+  var matSteel = new THREE.MeshStandardMaterial({ color: 0x232e3a, roughness: 0.5, metalness: 0.6 });
+  var matScaffold = new THREE.MeshStandardMaterial({ color: 0x14343c, roughness: 0.55, metalness: 0.5 });
+  var matRoad = new THREE.MeshStandardMaterial({ color: 0x1a212c, roughness: 0.9, metalness: 0.05 });
+  var matCyanGlow = new THREE.MeshStandardMaterial({ color: 0x062a30, emissive: CYAN, emissiveIntensity: 1.6, roughness: 0.4 });
+  var matRedGlow = new THREE.MeshStandardMaterial({ color: 0x2a060a, emissive: RED, emissiveIntensity: 1.6, roughness: 0.4 });
+  var matGreenGlow = new THREE.MeshStandardMaterial({ color: 0x062a10, emissive: GREEN, emissiveIntensity: 1.8, roughness: 0.4 });
 
-  /* Facade texture: dark face with lit windows in the accent colour.
-     Used as both map and emissiveMap, so only the lit windows glow. */
+  /* Glow sprite texture: a soft radial halo so lamps and beacons
+     read as light sources on a phone, not just bright dots. */
+  function glowTexture() {
+    var c = document.createElement("canvas");
+    c.width = 64; c.height = 64;
+    var g = c.getContext("2d");
+    var grad = g.createRadialGradient(32, 32, 0, 32, 32, 32);
+    grad.addColorStop(0, "rgba(255,255,255,1)");
+    grad.addColorStop(0.35, "rgba(255,255,255,0.45)");
+    grad.addColorStop(1, "rgba(255,255,255,0)");
+    g.fillStyle = grad; g.fillRect(0, 0, 64, 64);
+    var tex = new THREE.CanvasTexture(c);
+    tex.colorSpace = THREE.SRGBColorSpace;
+    return tex;
+  }
+  var haloTex = glowTexture();
+  function halo(x, y, z, colorCss, size) {
+    var m = new THREE.SpriteMaterial({
+      map: haloTex, color: colorCss, transparent: true, opacity: 0.55,
+      blending: THREE.AdditiveBlending, depthWrite: false, fog: false
+    });
+    var s = new THREE.Sprite(m);
+    s.position.set(x, y, z);
+    s.scale.set(size, size, 1);
+    scene.add(s);
+    return s;
+  }
+
+  /* Facade texture: lighter face with most windows lit in the accent
+     colour. Used as both map and emissiveMap, so only the lit
+     windows glow. Brighter than the old build: more windows lit,
+     stronger emissive, so towers read at a glance. */
   function facadeTexture(accentCss, repeatY) {
     var c = document.createElement("canvas");
     c.width = 128; c.height = 256;
     var g = c.getContext("2d");
-    g.fillStyle = "#0a0e13"; g.fillRect(0, 0, 128, 256);
-    g.fillStyle = "#070a0e"; g.fillRect(0, 228, 128, 28);
+    g.fillStyle = "#131a22"; g.fillRect(0, 0, 128, 256);
+    g.fillStyle = "#0d1219"; g.fillRect(0, 228, 128, 28);
     for (var r = 0; r < 14; r++) {
       for (var col = 0; col < 6; col++) {
         var x = 8 + col * 20, y = 10 + r * 16;
-        if (rand() < 0.55) {
+        if (rand() < 0.78) {
           g.fillStyle = accentCss;
-          g.globalAlpha = 0.55 + rand() * 0.45;
+          g.globalAlpha = 0.75 + rand() * 0.25;
           g.fillRect(x, y, 10, 8);
           g.globalAlpha = 1;
         } else {
-          g.fillStyle = "#10161d";
+          g.fillStyle = "#1a232e";
           g.fillRect(x, y, 10, 8);
         }
       }
@@ -164,29 +216,30 @@ import * as THREE from "three";
   function facadeMaterial(accentCss, repeatY) {
     var tex = facadeTexture(accentCss, repeatY);
     return new THREE.MeshStandardMaterial({
-      map: tex, emissiveMap: tex, emissive: 0xffffff, emissiveIntensity: 0.55,
-      roughness: 0.85, metalness: 0.1
+      map: tex, emissiveMap: tex, emissive: 0xffffff, emissiveIntensity: 1.15,
+      roughness: 0.8, metalness: 0.1
     });
   }
   var matFacadeCyan = facadeMaterial("#00e5ff", 1);
   var matFacadeRed = facadeMaterial("#ff2638", 1);
+  var matFacadeGreen = facadeMaterial("#39ff7a", 1);
 
-  /* ---------- plaza ---------- */
+  /* ---------- ground: lighter plaza so the street reads ---------- */
   (function plaza() {
     var c = document.createElement("canvas");
     c.width = 512; c.height = 512;
     var g = c.getContext("2d");
-    g.fillStyle = "#05070b"; g.fillRect(0, 0, 512, 512);
-    g.strokeStyle = "rgba(0,229,255,0.10)"; g.lineWidth = 1;
+    g.fillStyle = "#10161f"; g.fillRect(0, 0, 512, 512);
+    g.strokeStyle = "rgba(0,229,255,0.16)"; g.lineWidth = 1;
     for (var i = 0; i <= 512; i += 32) {
       g.beginPath(); g.moveTo(i, 0); g.lineTo(i, 512); g.stroke();
       g.beginPath(); g.moveTo(0, i); g.lineTo(512, i); g.stroke();
     }
-    g.fillStyle = "rgba(0,229,255,0.05)";
+    g.fillStyle = "rgba(0,229,255,0.08)";
     g.fillRect(0, 236, 512, 40); g.fillRect(236, 0, 40, 512);
-    g.strokeStyle = "rgba(255,38,56,0.45)"; g.lineWidth = 3;
+    g.strokeStyle = "rgba(255,38,56,0.55)"; g.lineWidth = 3;
     g.beginPath(); g.arc(256, 256, 200, 0, Math.PI * 2); g.stroke();
-    g.strokeStyle = "rgba(0,229,255,0.5)"; g.lineWidth = 2;
+    g.strokeStyle = "rgba(0,229,255,0.65)"; g.lineWidth = 2;
     g.beginPath(); g.arc(256, 256, 96, 0, Math.PI * 2); g.stroke();
     var tex = new THREE.CanvasTexture(c);
     tex.colorSpace = THREE.SRGBColorSpace;
@@ -200,7 +253,7 @@ import * as THREE from "three";
     /* Raised central plaza disc with a cyan ring. */
     var disc = new THREE.Mesh(
       new THREE.CylinderGeometry(26, 28, 0.6, 48),
-      new THREE.MeshStandardMaterial({ color: 0x0d1219, roughness: 0.85, metalness: 0.15 })
+      new THREE.MeshStandardMaterial({ color: 0x1b232e, roughness: 0.85, metalness: 0.15 })
     );
     disc.position.set(0, 0.3, 0); disc.receiveShadow = true; disc.castShadow = true;
     scene.add(disc);
@@ -208,6 +261,63 @@ import * as THREE from "three";
     ring.rotation.x = Math.PI / 2; ring.position.set(0, 0.65, 0);
     scene.add(ring);
   })();
+
+  /* ---------- the lit street: a road through the plaza ----------
+     North-south, 14 wide, with cyan centre dashes, red edge lines,
+     and crosswalk stripes where it meets the plaza. */
+  (function street() {
+    var road = new THREE.Mesh(new THREE.PlaneGeometry(14, 170), matRoad);
+    road.rotation.x = -Math.PI / 2;
+    road.position.set(0, 0.06, 0);
+    road.receiveShadow = true;
+    scene.add(road);
+    /* Centre dashes, glowing cyan. */
+    for (var z = -80; z <= 80; z += 10) {
+      if (Math.abs(z) < 28) continue; /* plaza disc covers the middle */
+      var dash = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.06, 4), matCyanGlow);
+      dash.position.set(0, 0.1, z);
+      scene.add(dash);
+    }
+    /* Red edge lines, full length. */
+    [-6.4, 6.4].forEach(function (x) {
+      var edge = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.06, 170), matRedGlow);
+      edge.position.set(x, 0.1, 0);
+      scene.add(edge);
+    });
+    /* Crosswalk stripes at the plaza edge, both ends. */
+    [-30, 30].forEach(function (zc) {
+      for (var i = -6; i <= 6; i += 2) {
+        var stripe = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.06, 2.2), matCyanGlow);
+        stripe.position.set(i, 0.1, zc);
+        scene.add(stripe);
+      }
+    });
+  })();
+
+  /* ---------- street lamps: poles, arms, glowing heads, light pools ---------- */
+  function lamp(x, z, withLight) {
+    var g = new THREE.Group();
+    g.position.set(x, 0, z);
+    var pole = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.22, 7.5, 8), matSteel);
+    pole.position.y = 3.75; pole.castShadow = true;
+    g.add(pole);
+    var arm = new THREE.Mesh(new THREE.BoxGeometry(2.2, 0.18, 0.18), matSteel);
+    arm.position.set(x < 0 ? 1.0 : -1.0, 7.4, 0);
+    g.add(arm);
+    var headX = x < 0 ? 2.0 : -2.0;
+    var head = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.3, 0.5), matCyanGlow);
+    head.position.set(headX, 7.3, 0);
+    g.add(head);
+    scene.add(g);
+    halo(x + headX, 7.1, z, "#00e5ff", 7);
+    if (withLight) lampLight(x + headX, 6.8, z);
+  }
+  lamp(-8.5, -45, true);
+  lamp(8.5, -15, false);
+  lamp(-8.5, 15, true);
+  lamp(8.5, 45, true);
+  lamp(-8.5, 62, false);
+  lamp(8.5, -62, true);
 
   /* ---------- helpers ---------- */
   function box(w, h, d, mat, x, y, z, castShadow) {
@@ -219,29 +329,38 @@ import * as THREE from "three";
     return m;
   }
   var beacons = [];
-  function beacon(x, y, z, mat) {
+  function beacon(x, y, z, mat, haloColor) {
     var b = new THREE.Mesh(new THREE.SphereGeometry(0.55, 12, 10), mat);
     b.position.set(x, y, z);
     scene.add(b);
     beacons.push(b);
+    if (haloColor) halo(x, y, z, haloColor, 5);
     return b;
   }
 
-  /* ---------- towers ---------- */
-  /* x, z, footprint w/d, segment heights, accent, unfinished top, green beacon */
+  /* ---------- towers ----------
+     x, z, footprint w/d, segment heights, accent, unfinished top, green beacon.
+     The four room stops sit in the near half of the street, where
+     their labels land below the hero and clear of the navigator
+     (projection probe, /tmp/bc-probe9.mjs): 01 PROJECT ROOMS ->
+     (-8,36), 02 HUMANS + AGENTS -> (16,28), 03 BYOE -> (34,14),
+     04 CBE BRIDGE -> (52,6). The northern towers are scenery. */
   var TOWERS = [
     { x: -38, z: -28, w: 14, d: 14, segs: [16, 12, 9], accent: "cyan", unfinished: false, green: false },
     { x: 30, z: -34, w: 12, d: 12, segs: [20, 14], accent: "red", unfinished: true, green: false },
     { x: -8, z: -48, w: 16, d: 12, segs: [24, 10], accent: "cyan", unfinished: false, green: true },
-    { x: 44, z: 8, w: 11, d: 11, segs: [13, 9], accent: "red", unfinished: false, green: false },
+    { x: 44, z: -14, w: 11, d: 11, segs: [13, 9], accent: "red", unfinished: false, green: false },
     { x: -46, z: 14, w: 12, d: 10, segs: [15, 8], accent: "cyan", unfinished: true, green: false },
-    { x: 12, z: 30, w: 13, d: 13, segs: [11], accent: "red", unfinished: false, green: false },
-    { x: -16, z: 34, w: 10, d: 10, segs: [18, 8], accent: "cyan", unfinished: false, green: false }
+    { x: 16, z: 28, w: 13, d: 13, segs: [11], accent: "green", unfinished: false, green: false },
+    { x: -8, z: 36, w: 10, d: 10, segs: [18, 8], accent: "cyan", unfinished: false, green: false },
+    { x: 34, z: 14, w: 11, d: 11, segs: [12, 7], accent: "cyan", unfinished: false, green: false },
+    { x: 52, z: 6, w: 12, d: 12, segs: [14, 8], accent: "red", unfinished: false, green: false }
   ];
+  var towerTops = {};
 
   TOWERS.forEach(function (t) {
-    var facade = t.accent === "red" ? matFacadeRed : matFacadeCyan;
-    var glow = t.accent === "red" ? matRedGlow : matCyanGlow;
+    var facade = t.accent === "red" ? matFacadeRed : (t.accent === "green" ? matFacadeGreen : matFacadeCyan);
+    var glow = t.accent === "red" ? matRedGlow : (t.accent === "green" ? matGreenGlow : matCyanGlow);
     var y = 0;
     /* Cylinder plinth base with a glowing ring. */
     var plinth = new THREE.Mesh(new THREE.CylinderGeometry(t.w * 0.62, t.w * 0.78, 1.6, 24), matPlinth);
@@ -305,7 +424,8 @@ import * as THREE from "three";
       scene.add(mast);
       y += 0.7;
     }
-    beacon(t.x, y + 1.1, t.z, t.green ? matGreenGlow : matRedGlow);
+    towerTops[t.x + "," + t.z] = y + 1.1;
+    beacon(t.x, y + 1.1, t.z, t.green ? matGreenGlow : matRedGlow, t.green ? "#39ff7a" : "#ff2638");
   });
 
   /* ---------- tower cranes ---------- */
@@ -403,8 +523,8 @@ import * as THREE from "three";
     g.add(stripe);
     scene.add(g);
   }
-  var matContainerCyan = new THREE.MeshStandardMaterial({ color: 0x0b2b33, roughness: 0.7, metalness: 0.4 });
-  var matContainerRed = new THREE.MeshStandardMaterial({ color: 0x3a0e14, roughness: 0.7, metalness: 0.4 });
+  var matContainerCyan = new THREE.MeshStandardMaterial({ color: 0x0f3540, roughness: 0.7, metalness: 0.4 });
+  var matContainerRed = new THREE.MeshStandardMaterial({ color: 0x47121a, roughness: 0.7, metalness: 0.4 });
   addContainer(-24, -6, 0.3, matContainerCyan);
   addContainer(-24, -2.4, 0.3, matContainerRed);
   addContainer(26, 22, -0.5, matContainerRed);
@@ -424,7 +544,7 @@ import * as THREE from "three";
     cabStrip.position.set(-5.5, 2.6, 0);
     g.add(cabStrip);
     var wheelGeo = new THREE.CylinderGeometry(0.55, 0.55, 0.4, 14);
-    var wheelMat = new THREE.MeshStandardMaterial({ color: 0x05070a, roughness: 0.95 });
+    var wheelMat = new THREE.MeshStandardMaterial({ color: 0x0a0e13, roughness: 0.95 });
     [[-4.4, 1.2], [-4.4, -1.2], [1.5, 1.2], [1.5, -1.2], [3, 1.2], [3, -1.2]].forEach(function (w) {
       var wheel = new THREE.Mesh(wheelGeo, wheelMat);
       wheel.rotation.x = Math.PI / 2;
@@ -438,12 +558,54 @@ import * as THREE from "three";
   box(2.2, 1, 2.2, matObsidian2, -27.4, 0.5, 26.4, true);
   box(2.6, 1.2, 2.6, matObsidian2, 34, 0.6, -18, true);
 
+  /* ---------- bridge to the app layer ----------
+     project: world point -> screen percent (null when behind camera).
+     focus: fly the orbit to a stop anchor.
+     setMode: the mode switch visibly changes the light. */
+  var _v = new THREE.Vector3();
+  window.__BC_project = function (x, y, z) {
+    _v.set(x, y, z).project(camera);
+    if (_v.z > 1) return null;
+    return { x: (_v.x * 0.5 + 0.5) * 100, y: (-_v.y * 0.5 + 0.5) * 100 };
+  };
+  window.__BC_towerTop = function (x, z) {
+    return towerTops[x + "," + z] || 20;
+  };
+  window.__BC_focus = function (x, y, z) {
+    flyTo = {
+      target: new THREE.Vector3(x, Math.max(6, y * 0.45), z),
+      radius: 66, az: orbit.az, polar: 1.02, t: 0
+    };
+  };
+  window.__BC_home = function () {
+    flyTo = {
+      target: orbitHome.target.clone(), radius: orbitHome.radius,
+      az: orbitHome.az, polar: orbitHome.polar, t: 0
+    };
+  };
+  window.__BC_setMode = function (mode) {
+    if (mode === "web2") {
+      renderer.toneMappingExposure = 1.5;
+      hemi.intensity = 1.35; amb.intensity = 0.7;
+      scene.fog.density = 0.0016;
+    } else if (mode === "web3") {
+      renderer.toneMappingExposure = 1.15;
+      hemi.intensity = 0.9; amb.intensity = 0.4;
+      scene.fog.density = 0.0024;
+    } else {
+      renderer.toneMappingExposure = 1.35;
+      hemi.intensity = 1.25; amb.intensity = 0.65;
+      scene.fog.density = 0.0020;
+    }
+  };
+
   /* ---------- interaction: drag to look, scroll to zoom ---------- */
   var dragging = false, lastX = 0, lastY = 0;
   var el = renderer.domElement;
   el.style.touchAction = "none";
   el.addEventListener("pointerdown", function (ev) {
     dragging = true; lastX = ev.clientX; lastY = ev.clientY;
+    flyTo = null;
     el.setPointerCapture(ev.pointerId);
   });
   el.addEventListener("pointermove", function (ev) {
@@ -458,6 +620,7 @@ import * as THREE from "three";
   el.addEventListener("pointercancel", endDrag);
   el.addEventListener("wheel", function (ev) {
     ev.preventDefault();
+    flyTo = null;
     orbit.radius = Math.min(130, Math.max(45, orbit.radius * (1 + ev.deltaY * 0.001)));
     applyCamera();
   }, { passive: false });
@@ -478,7 +641,15 @@ import * as THREE from "three";
   /* ---------- render loop ---------- */
   var firstFrame = true;
   function render(t) {
-    if (!dragging) {
+    if (flyTo) {
+      flyTo.t = Math.min(1, flyTo.t + 0.03);
+      var e = flyTo.t * flyTo.t * (3 - 2 * flyTo.t);
+      orbit.target.lerp(flyTo.target, e * 0.25 + 0.02);
+      orbit.radius += (flyTo.radius - orbit.radius) * 0.06;
+      orbit.polar += (flyTo.polar - orbit.polar) * 0.06;
+      if (flyTo.t >= 1) flyTo = null;
+      applyCamera();
+    } else if (!dragging) {
       orbit.az += 0.00012;
       applyCamera();
     }
@@ -486,7 +657,7 @@ import * as THREE from "three";
     cranes.forEach(function (c, i) {
       c.top.rotation.y = Math.sin(time * 0.12 + c.phase) * 0.45 + (i === 0 ? 0.4 : -0.7);
     });
-    var pulse = 1.2 + Math.sin(time * 2) * 0.8;
+    var pulse = 1.3 + Math.sin(time * 2) * 0.7;
     beacons.forEach(function (b) { b.scale.setScalar(1 + Math.sin(time * 2) * 0.15); });
     matRedGlow.emissiveIntensity = pulse;
     renderer.render(scene, camera);
